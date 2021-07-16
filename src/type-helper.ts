@@ -8,7 +8,12 @@ export class TypeHelper
      */
     private constructor() { }
     
-    
+    /**
+     * 
+     * Returns a boolean from a type conversion of a value.
+     * 
+     * @param value - The value being type converted.
+     */
     public static parseBoolean(value: any): boolean | null
     {
         if (value == null)
@@ -28,6 +33,12 @@ export class TypeHelper
         return null;
     }
     
+    /**
+     * 
+     * Returns a number from a type conversion of a value.
+     * 
+     * @param value - The value being type converted.
+     */
     public static parseNumber(value: any): number | null
     {
         if (value == null)
@@ -47,14 +58,15 @@ export class TypeHelper
         
         return null;
     }
-    
+
+    // FIXME: DS
     public static enumTypeToTuples<T extends string | number>(enumClass: object): ReadonlyArray<[string, T]>
     {
         given(enumClass, "enumClass").ensureHasValue().ensureIsObject();
         
         return this.getEnumTuples(enumClass) as any;
     }
-    
+
     private static getEnumTuples(enumType: object): ReadonlyArray<[string, string | number]>
     {
         const keys = Object.keys(enumType);
@@ -67,6 +79,12 @@ export class TypeHelper
         return keys.map(t => [t, (<any>enumType)[t]]) as any;
     }
     
+    /**
+     * 
+     * Returns true if the value is a number and finite else false.
+     * 
+     * @param value - The value being checked.
+     */
     private static isNumber(value: any): boolean
     {
         if (value == null)
