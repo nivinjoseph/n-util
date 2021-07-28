@@ -9,7 +9,12 @@ export class HtmlSanitizer
      */
     private constructor() { }
     
-    
+    /**
+     * 
+     * Returns a sanitized version of an given `html` using `sanitize-html`.
+     * 
+     * @param html - The html to be sanitized.
+     */
     public static sanitize(html: string): string
     {
         given(html, "html").ensureHasValue().ensureIsString();

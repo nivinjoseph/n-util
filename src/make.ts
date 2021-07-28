@@ -5,7 +5,13 @@ export abstract class Make // static class
 {
     private constructor() { }
 
-
+    /**
+     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry, `numberOfRetries` times.
+     * 
+     * @param func - The callback function being invoked.
+     * @param numberOfRetries - The amount of time to invoke `func`.
+     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     */
     public static retry<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
         given(func, "func").ensureHasValue().ensureIsFunction();
@@ -164,6 +170,12 @@ export abstract class Make // static class
         return result;
     }
     
+    /**
+     * 
+     * Returns an asynchronous function given a synchronous callback, `func`.
+     * 
+     * @param func - The callback function being converted to an asynchronous function.
+     */
     public static syncToAsync<T>(func: (...params: any[]) => T): (...params: any[]) => Promise<T>
     {
         given(func, "func").ensureHasValue().ensureIsFunction();
@@ -184,6 +196,12 @@ export abstract class Make // static class
         return result;
     }
     
+    /**
+     * 
+     * Returns a promise given a callback `func`.
+     * 
+     * @param func - The callback function being converted to a promise.
+     */
     public static callbackToPromise<T>(func: (...params: any[]) => void): (...params: any[]) => Promise<T>
     {
         given(func, "func").ensureHasValue().ensureIsFunction();
@@ -206,6 +224,13 @@ export abstract class Make // static class
         return result;
     }
     
+    /**
+     * 
+     * Iterates through a loop specified by the `numberOfTimes` while invoking the callback function `func` with the specific index of the loop.
+     * 
+     * @param func - The callback function being invoked throughout the loop.
+     * @param numberOfTimes - The amount of times 
+     */
     public static loop(func: (index: number) => void, numberOfTimes: number): void
     {
         given(func, "func").ensureHasValue().ensureIsFunction();
@@ -215,6 +240,15 @@ export abstract class Make // static class
             func(i);  
     }
     
+    /**
+     * 
+     * Iterates through a loop specified by the `numberOfTimes` while invoking the asynchronous callback function `func` with the specific index of the loop. 
+     * The `degreeOfParallelism` can be specified to determine the amount of parallelism wanted.
+     * 
+     * @param func - The callback function being invoked throughout the loop.
+     * @param numberOfTimes - The amount of times.
+     * @param degreesOfParallelism - The amount of parallelism wanted. Defaults to all.
+     */
     public static async loopAsync(asyncFunc: (index: number) => Promise<void>, numberOfTimes: number, degreesOfParallelism?: number): Promise<void>
     {
         given(asyncFunc, "asyncFunc").ensureHasValue().ensureIsFunction();
@@ -266,8 +300,10 @@ export abstract class Make // static class
 
     /**
      * 
-     * @param min inclusive
-     * @param max exclusive
+     * Returns a random int given `min` value which is inclusive and `max` value which is exclusive.
+     * 
+     * @param min - The minimum inclusive value.
+     * @param max - The maximum exclusive value.
      */
     public static randomInt(min: number, max: number): number
     {
@@ -280,6 +316,12 @@ export abstract class Make // static class
         return Math.floor(Math.random() * (max - min)) + min; // The maximum is exclusive and the minimum is inclusive
     }
     
+    /**
+     * 
+     * Returns a generated random alphanumeric code of length `numChars`.
+     * 
+     * @param numChars - The length of the random code.
+     */
     public static randomCode(numChars: number): string
     {
         given(numChars, "numChars").ensureHasValue().ensureIsNumber()
@@ -307,6 +349,13 @@ export abstract class Make // static class
         return result.join("");
     }
     
+    /**
+     * 
+     * Returns a generated random alphabetical code of length `numChars`. If `caseInsensitive` is true then the code will only consist of lowercase letters.
+     * 
+     * @param numChars - The length of the random code.
+     * @param caseInsensitive - If true the code will only consist of lowercase letters, else both uppercase and lowercase.
+     */
     public static randomTextCode(numChars: number, caseInsensitive: boolean = false): string
     {
         given(numChars, "numChars").ensureHasValue().ensureIsNumber()
@@ -337,6 +386,12 @@ export abstract class Make // static class
         return result.join("");
     }
     
+    /**
+     * 
+     * Returns a generated random numerical code of length `numChars`.
+     * 
+     * @param numChars - The length of the random code.
+     */
     public static randomNumericCode(numChars: number): string
     {
         given(numChars, "numChars").ensureHasValue().ensureIsNumber()

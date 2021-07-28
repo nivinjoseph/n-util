@@ -13,7 +13,9 @@ export class Mutex
         this._currentDeferred = null;
     }
 
-
+    /**
+     * 
+     */
     public lock(): Promise<void>
     {
         const deferred = new Deferred<void>();
