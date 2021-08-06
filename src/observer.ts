@@ -32,7 +32,12 @@ export class Observer<T> implements Observable<T>
         this._event = event.trim();
     }
     
-    
+    /**
+     * 
+     * Returns a subscription to an event
+     * 
+     * @param callback 
+     */
     public subscribe(callback: (eventData: T) => void): Subscription
     {
         given(callback, "callback").ensureHasValue().ensureIsFunction();

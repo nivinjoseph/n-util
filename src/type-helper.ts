@@ -59,7 +59,12 @@ export class TypeHelper
         return null;
     }
 
-    // FIXME: DS
+    /**
+     * 
+     * Returns an tuple given a enumeration class, `enumClass`.
+     * 
+     * @param enumClass - The enumClass being converted to tuple.
+     */
     public static enumTypeToTuples<T extends string | number>(enumClass: object): ReadonlyArray<[string, T]>
     {
         given(enumClass, "enumClass").ensureHasValue().ensureIsObject();
@@ -79,12 +84,6 @@ export class TypeHelper
         return keys.map(t => [t, (<any>enumType)[t]]) as any;
     }
     
-    /**
-     * 
-     * Returns true if the value is a number and finite else false.
-     * 
-     * @param value - The value being checked.
-     */
     private static isNumber(value: any): boolean
     {
         if (value == null)

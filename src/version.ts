@@ -42,7 +42,12 @@ export class Version
         this._patch = patch;
     }
     
-    
+    /**
+     * 
+     * Returns true if the `version` is equal, else returns false.
+     * 
+     * @param version - The version being checked.
+     */
     public equals(version: Version): boolean
     {
         given(version, "version").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Version);
@@ -50,6 +55,12 @@ export class Version
         return version.major === this.major && version.minor === this.minor && version.patch === this.patch;
     }
     
+    /**
+     * 
+     * Returns 1 if the `version` is newer, -1 if the `version` is older, else 0 if the `version` is the same.
+     * 
+     * @param version - The version being checked.
+     */
     public compareTo(version: Version): number
     {
         given(version, "version").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Version);
@@ -65,6 +76,9 @@ export class Version
         return this.compare(this.patch, version.patch);
     }
     
+    /**
+     * Returns the version as a string.
+     */
     public toString(): string
     {
         return this.full;

@@ -6,6 +6,7 @@ export abstract class Make // static class
     private constructor() { }
 
     /**
+     * 
      * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry, `numberOfRetries` times.
      * 
      * @param func - The callback function being invoked.
@@ -54,6 +55,15 @@ export abstract class Make // static class
         return result;
     }
 
+    /**
+     * 
+     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry with a delay given by `delayMS`, with `numberOfRetries` times.
+     * 
+     * @param func - The callback function being invoked.
+     * @param numberOfRetries - The amount of time to invoke `func`.
+     * @param delayMS - A delay before the next function call. Value is in milliseconds
+     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     */
     public static retryWithDelay<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, delayMS: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
         given(func, "func").ensureHasValue().ensureIsFunction();
@@ -110,6 +120,15 @@ export abstract class Make // static class
         return result;
     }
 
+    /**
+     * 
+     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry with a delay that increases exponentially between each function call, with `numberOfRetries` times.
+     * 
+     * @param func - The callback function being invoked.
+     * @param numberOfRetries - The amount of time to invoke `func`.
+     * @param delayMS - A delay before the next function call. Value is in milliseconds
+     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     */
     public static retryWithExponentialBackoff<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
         given(func, "func").ensureHasValue().ensureIsFunction();

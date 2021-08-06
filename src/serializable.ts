@@ -9,7 +9,9 @@ export abstract class Serializable<TData extends object = {}>
         given(data, "data").ensureHasValue().ensureIsObject();
     }
     
-    
+    /**
+     * Returns the serialized data after serializing the data.
+     */
     public serialize(): TData
     {
         const typeName = (<Object>this).getTypeName();
@@ -91,6 +93,12 @@ export class Deserializer
             this._typeCache.set(typeName, type);
     }
     
+    /**
+     * 
+     * Returns the deserialized object given a `serialized` object.
+     * 
+     * @param serialized - The serialized object to be deserialized.
+     */
     public static deserialize<T>(serialized: object): T
     {
         given(serialized, "serialized").ensureHasValue().ensureIsObject()

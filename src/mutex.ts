@@ -14,7 +14,7 @@ export class Mutex
     }
 
     /**
-     * 
+     * Locks a mutex lock. This needs to be unlocked with the `release` method.
      */
     public lock(): Promise<void>
     {
@@ -29,6 +29,9 @@ export class Mutex
         return deferred.promise;
     }
 
+    /**
+     * Releases a mutex lock. This is invoked consecutively after the `lock` method.
+     */
     public release(): void
     {
         if (this._currentDeferred == null)

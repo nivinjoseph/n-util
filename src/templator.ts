@@ -21,7 +21,12 @@ export class Templator
         this._tokens = tokens.filter(t => t[0] === "name").map(t => t[1]);
     }
     
-    
+    /**
+     * 
+     * Returns the interpolated HTML string and replaces the mustache tags (i.e. `{{ key... }}`) with the `data` value with the keys inside the mustache tag.
+     * 
+     * @param data - The data used to replace the template. 
+     */
     public render(data: Object): string
     {
         given(data, "data").ensureHasValue().ensureIsObject();

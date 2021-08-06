@@ -23,7 +23,12 @@ export class Profiler
         }];
     }
     
-    
+    /**
+     * 
+     * Creates a trace point for a profiler.
+     * 
+     * @param message - A message for the trace point's context.
+     */
     public trace(message: string): void
     {
         given(message, "message").ensureHasValue().ensureIsString();
