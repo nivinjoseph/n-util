@@ -31,7 +31,7 @@ export class BackgroundProcessor implements Disposable
         this.initiateBackgroundProcessing();
     }
 
-
+    
     public processAction(action: () => Promise<void>, errorHandler?: (e: Error) => Promise<void>): void
     {
         if (this._isDisposed)

@@ -17,11 +17,23 @@ export class Deferred<T>
         });
     }
 
+    /**
+     * 
+     * Creates a resolve given a `value` for the deferred promise.
+     * 
+     * @param value - The value to resolve.
+     */
     public resolve(value?: T): void
     {
         this._resolve(value);
     }
 
+    /**
+     * 
+     * Creates a reject given a `value` for the deferred promise.
+     * 
+     * @param reason - The value to reject.
+     */
     public reject(reason?: any): void
     {
         this._reject(reason);

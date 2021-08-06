@@ -9,7 +9,12 @@ export class ImageHelper
      */
     private constructor() { }
     
-    
+    /**
+     * 
+     * Returns a buffer after buffering a image based on it's given `dataUrl`.
+     * 
+     * @param dataUrl - The url pointing to the image to be buffered.
+     */
     public static dataUrlToBuffer(dataUrl: string): Buffer
     {
         given(dataUrl, "dataUrl").ensureHasValue().ensureIsString();
