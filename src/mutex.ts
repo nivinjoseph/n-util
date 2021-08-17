@@ -1,6 +1,8 @@
 import { Deferred } from "./deferred";
 
-
+/**
+ * @description A class used to create Mutual Exclusion Lock and prevent race condition from occurring.
+ */
 export class Mutex
 {
     private readonly _deferreds: Array<Deferred<void>>;
@@ -14,7 +16,7 @@ export class Mutex
     }
 
     /**
-     * Locks a mutex lock. This needs to be unlocked with the `release` method.
+     * @description Locks a mutex lock. This needs to be unlocked with the `release` method.
      */
     public lock(): Promise<void>
     {
@@ -30,7 +32,7 @@ export class Mutex
     }
 
     /**
-     * Releases a mutex lock. This is invoked consecutively after the `lock` method.
+     * @description Releases a mutex lock. This is invoked consecutively after the `lock` method.
      */
     public release(): void
     {

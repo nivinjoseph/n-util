@@ -1,7 +1,9 @@
 import * as Mustache from "mustache";
 import { given } from "@nivinjoseph/n-defensive";
 
-
+/**
+ * @description A class used to render templates that uses the mustache syntax.
+ */
 export class Templator
 {
     private readonly _template: string;
@@ -22,10 +24,12 @@ export class Templator
     }
     
     /**
-     * 
-     * Returns the interpolated HTML string and replaces the mustache tags (i.e. `{{ key... }}`) with the `data` value with the keys inside the mustache tag.
+     * @description Changes the interpolated HTML string and replaces the mustache tags (i.e. `{{ key... }}`) 
+     * with the `data` value with the keys inside the mustache tag. Nested objects can be accessed through
+     * (i.e. `{{ key1.key2... }}`)
      * 
      * @param data - The data used to replace the template. 
+     * @returns The rendered template.
      */
     public render(data: Object): string
     {

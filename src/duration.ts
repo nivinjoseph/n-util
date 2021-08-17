@@ -2,16 +2,18 @@ import { given } from "@nivinjoseph/n-defensive";
 
 /**
  * @static
+ * 
+ * @description Converts time value to a millisecond duration value.
  */
 export class Duration
 {
     private constructor() { }
     
     /**
+     * @description Converts `seconds` into a millisecond value.
      * 
-     * Returns the milliseconds value given seconds.
-     * 
-     * @param seconds - The value being converted to milliseconds. 
+     * @param seconds - The seconds value being converted to milliseconds. 
+     * @returns The millisecond value.
      */
     public static fromSeconds(seconds: number): number
     {
@@ -21,10 +23,10 @@ export class Duration
     }
     
     /**
+     * @description Converts `minutes` into a millisecond value.
      * 
-     * Returns the milliseconds value given minutes.
-     * 
-     * @param minutes - The value being converted to milliseconds.
+     * @param minutes - The minutes value being converted to milliseconds. 
+     * @returns The millisecond value.
      */
     public static fromMinutes(minutes: number): number
     {
@@ -34,10 +36,10 @@ export class Duration
     }
     
     /**
+     * @description Converts `hours` into a millisecond value.
      * 
-     * Returns the milliseconds value given hours.
-     * 
-     * @param hours - The value being converted to milliseconds.
+     * @param hours - The hours value being converted to milliseconds. 
+     * @returns The millisecond value.
      */
     public static fromHours(hours: number): number
     {
@@ -47,10 +49,10 @@ export class Duration
     }
     
     /**
+     * @description Converts `days` into a millisecond value.
      * 
-     * Returns the milliseconds value given days.
-     * 
-     * @param days - The value being converted to milliseconds.
+     * @param days - The days value being converted to milliseconds. 
+     * @returns The millisecond value.
      */
     public static fromDays(days: number): number
     {

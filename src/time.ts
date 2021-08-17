@@ -1,7 +1,7 @@
 import { given } from "@nivinjoseph/n-defensive";
 
 /**
- * @static
+ * @description A class used for time comparison.
  */
 export class Time
 {

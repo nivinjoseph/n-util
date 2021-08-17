@@ -6,12 +6,13 @@ export abstract class Make // static class
     private constructor() { }
 
     /**
+     * @description Executes an async function, `func` until a result is achieve, if no results are shown then it will retry `numberOfRetries` number of times; if an exception
+     * is thrown the `errorPredicate` function will be tested against the exception.
      * 
-     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry, `numberOfRetries` times.
-     * 
-     * @param func - The callback function being invoked.
-     * @param numberOfRetries - The amount of time to invoke `func`.
-     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     * @param func - The async function to be executed.
+     * @param numberOfRetries - The number of times to invoke `func`.
+     * @param errorPredicate - If an exception is throw from the execution of `func`, it will be tested against this function and will retry if the function returns true.
+     * @returns The value given by executing `func`.
      */
     public static retry<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
@@ -56,13 +57,14 @@ export abstract class Make // static class
     }
 
     /**
+     * @description Executes an async function, `func` until a result is achieve, if no results are shown then it will retry `numberOfRetries` number of times with a delay, `delayMS` 
+     * between each iteration; if an exception is thrown the `errorPredicate` function will be tested against the exception.
      * 
-     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry with a delay given by `delayMS`, with `numberOfRetries` times.
-     * 
-     * @param func - The callback function being invoked.
-     * @param numberOfRetries - The amount of time to invoke `func`.
-     * @param delayMS - A delay before the next function call. Value is in milliseconds
-     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     * @param func - The async function to be executed.
+     * @param numberOfRetries - The number of times to invoke `func`.
+     * @param delayMS - The delay in milliseconds before each execution of the method.
+     * @param errorPredicate - If an exception is throw from the execution of `func`, it will be tested against this function and will retry if the function returns true.
+     * @returns The value given by executing `func`.
      */
     public static retryWithDelay<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, delayMS: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
@@ -121,13 +123,13 @@ export abstract class Make // static class
     }
 
     /**
+     * @description Executes an async function, `func` until a result is achieve, if no results are shown then it will retry `numberOfRetries` number of times with a delay that increases 
+     * exponentially between each iteration; if an exception is thrown the `errorPredicate` function will be tested against the exception.
      * 
-     * Returns the function results of `func` if the call is successful or if `errorPredicate` is false, else it'll retry with a delay that increases exponentially between each function call, with `numberOfRetries` times.
-     * 
-     * @param func - The callback function being invoked.
-     * @param numberOfRetries - The amount of time to invoke `func`.
-     * @param delayMS - A delay before the next function call. Value is in milliseconds
-     * @param errorPredicate - A callback function that when an error occurs, then a value `error` will be passed in which is the error caught.
+     * @param func - The async function to be executed.
+     * @param numberOfRetries - The number of times to invoke `func`.
+     * @param errorPredicate - If an exception is throw from the execution of `func`, it will be tested against this function and will retry if the function returns true.
+     * @returns The value given by executing `func`.
      */
     public static retryWithExponentialBackoff<T>(func: (...params: any[]) => Promise<T>, numberOfRetries: number, errorPredicate?: (error: any) => boolean): (...params: any[]) => Promise<T>
     {
@@ -190,10 +192,10 @@ export abstract class Make // static class
     }
     
     /**
+     * @description Converts a synchronous function to an Promise.
      * 
-     * Returns an asynchronous function given a synchronous callback, `func`.
-     * 
-     * @param func - The callback function being converted to an asynchronous function.
+     * @param func - The synchronous function to be converted to a Promise.
+     * @returns The converted Promise.
      */
     public static syncToAsync<T>(func: (...params: any[]) => T): (...params: any[]) => Promise<T>
     {
@@ -216,10 +218,10 @@ export abstract class Make // static class
     }
     
     /**
+     * @description Converts a callback to an Promise.
      * 
-     * Returns a promise given a callback `func`.
-     * 
-     * @param func - The callback function being converted to a promise.
+     * @param func - The callback to be converted to a Promise.
+     * @returns The converted Promise.
      */
     public static callbackToPromise<T>(func: (...params: any[]) => void): (...params: any[]) => Promise<T>
     {
@@ -244,11 +246,10 @@ export abstract class Make // static class
     }
     
     /**
+     * @description Executes `func` given the number of times, `numberOfTimes`.
      * 
-     * Iterates through a loop specified by the `numberOfTimes` while invoking the callback function `func` with the specific index of the loop.
-     * 
-     * @param func - The callback function being invoked throughout the loop.
-     * @param numberOfTimes - The amount of times 
+     * @param func - The function to be executed.
+     * @param numberOfTimes - The number of time to execute `func`.
      */
     public static loop(func: (index: number) => void, numberOfTimes: number): void
     {
@@ -260,13 +261,11 @@ export abstract class Make // static class
     }
     
     /**
-     * 
-     * Iterates through a loop specified by the `numberOfTimes` while invoking the asynchronous callback function `func` with the specific index of the loop. 
-     * The `degreeOfParallelism` can be specified to determine the amount of parallelism wanted.
+     * @description Executes an async function, `asyncFunc` given `numberOfTimes`. 
      * 
      * @param func - The callback function being invoked throughout the loop.
-     * @param numberOfTimes - The amount of times.
-     * @param degreesOfParallelism - The amount of parallelism wanted. Defaults to all.
+     * @param numberOfTimes - The number of times.
+     * @param degreesOfParallelism - The number of times to execute the function at a time, defaults to all at the same time.
      */
     public static async loopAsync(asyncFunc: (index: number) => Promise<void>, numberOfTimes: number, degreesOfParallelism?: number): Promise<void>
     {
@@ -318,11 +317,11 @@ export abstract class Make // static class
     }
 
     /**
-     * 
-     * Returns a random int given `min` value which is inclusive and `max` value which is exclusive.
+     * @description Generates a random int between `min` (inclusive) and `max` exclusive.
      * 
      * @param min - The minimum inclusive value.
      * @param max - The maximum exclusive value.
+     * @returns The random int.
      */
     public static randomInt(min: number, max: number): number
     {
@@ -369,11 +368,11 @@ export abstract class Make // static class
     }
     
     /**
-     * 
-     * Returns a generated random alphabetical code of length `numChars`. If `caseInsensitive` is true then the code will only consist of lowercase letters.
+     * @description Generates random alphabetical code of length `numChars`. If `caseInsensitive` is true then the code will only consist of lowercase letters
      * 
      * @param numChars - The length of the random code.
      * @param caseInsensitive - If true the code will only consist of lowercase letters, else both uppercase and lowercase.
+     * @returns The resulting random text code.
      */
     public static randomTextCode(numChars: number, caseInsensitive: boolean = false): string
     {
@@ -406,10 +405,10 @@ export abstract class Make // static class
     }
     
     /**
-     * 
-     * Returns a generated random numerical code of length `numChars`.
+     * @description Generates a random numerical code of length `numChars`.
      * 
      * @param numChars - The length of the random code.
+     * @returns The resulting random numerical code.
      */
     public static randomNumericCode(numChars: number): string
     {

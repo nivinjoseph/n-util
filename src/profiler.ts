@@ -1,6 +1,9 @@
 import { given } from "@nivinjoseph/n-defensive";
 
 // public
+/**
+ * @description A class used to profile and trace code execution.
+ */
 export class Profiler
 {
     private readonly _id: string;

@@ -1,7 +1,9 @@
 import { ApplicationException, ArgumentException } from "@nivinjoseph/n-exception";
 import { given } from "@nivinjoseph/n-defensive";
 
-
+/**
+ * @description A class used to create serialize data object.
+ */
 export abstract class Serializable<TData extends object = {}>
 {
     public constructor(data: TData)
@@ -10,7 +12,9 @@ export abstract class Serializable<TData extends object = {}>
     }
     
     /**
-     * Returns the serialized data after serializing the data.
+     * @description Serializes the data.
+     * 
+     * @returns The serialized data.
      */
     public serialize(): TData
     {
@@ -63,7 +67,9 @@ export abstract class Serializable<TData extends object = {}>
 }
 
 
-
+/**
+ * @description Used to deserialize serialized data.
+ */
 export class Deserializer
 {
     private static _typeCache = new Map<string, object>();
@@ -94,10 +100,10 @@ export class Deserializer
     }
     
     /**
-     * 
-     * Returns the deserialized object given a `serialized` object.
+     * @description Deserialized the given `serialize` data.
      * 
      * @param serialized - The serialized object to be deserialized.
+     * @returns The deserialized data.
      */
     public static deserialize<T>(serialized: object): T
     {

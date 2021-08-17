@@ -1,11 +1,13 @@
 import { given } from "@nivinjoseph/n-defensive";
 
 // public
+/**
+ * @description Creates a Promise that gets resolved after a delay of the given duration.
+ */
 export abstract class Delay // static class
 {
     /**
-     * 
-     * Asynchronously delays for an hour value.
+     * @description Creates a Promise that resolves in given hour, `value`.
      * 
      * @param value - The value in hours to delay by.
      */
@@ -16,10 +18,9 @@ export abstract class Delay // static class
     }
     
     /**
+     * @description Creates a Promise that resolves in given minute, `value`.
      * 
-     * Asynchronously delays for a minute value.
-     * 
-     * @param value - The value in minute to delay by.
+     * @param value - The value in minutes to delay by.
      */
     public static async minutes(value: number): Promise<void>
     {
@@ -28,10 +29,9 @@ export abstract class Delay // static class
     }
     
     /**
+     * @description Creates a Promise that resolves in given second, `value`.
      * 
-     * Asynchronously delays for a second value.
-     * 
-     * @param value - The value in second to delay by.
+     * @param value - The value in seconds to delay by.
      */
     public static async seconds(value: number): Promise<void>
     {
@@ -40,10 +40,9 @@ export abstract class Delay // static class
     }
     
     /**
+     * @description Creates a Promise that resolves in given millisecond, `value`.
      * 
-     * Asynchronously delays for a millisecond value.
-     * 
-     * @param value - The value in millisecond to delay by.
+     * @param value - The value in milliseconds to delay by.
      */
     public static milliseconds(value: number): Promise<void>
     {

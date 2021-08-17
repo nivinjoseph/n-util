@@ -1,7 +1,9 @@
 import * as SanitizeHtml from "sanitize-html";
 import { given } from "@nivinjoseph/n-defensive";
 
-
+/**
+ * @description A class used to sanitize and clean up HTML fragments.
+ */
 export class HtmlSanitizer
 {
     /**
@@ -10,10 +12,10 @@ export class HtmlSanitizer
     private constructor() { }
     
     /**
-     * 
-     * Returns a sanitized version of an given `html` using `sanitize-html`.
+     * @description Cleans up the HTML fragments from HTML copied from text editors therefore, sanitizing it.
      * 
      * @param html - The html to be sanitized.
+     * @returns The sanitized html.
      */
     public static sanitize(html: string): string
     {
