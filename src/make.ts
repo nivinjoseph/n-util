@@ -335,10 +335,10 @@ export abstract class Make // static class
     }
     
     /**
-     * 
-     * Returns a generated random alphanumeric code of length `numChars`.
+     * @description Generates random alphanumeric code of length `numChars`.
      * 
      * @param numChars - The length of the random code.
+     * @returns The random alphanumeric code.
      */
     public static randomCode(numChars: number): string
     {
