@@ -1,6 +1,8 @@
 import { given } from "@nivinjoseph/n-defensive";
 
-
+/**
+ * @description A class used to add helper function to primitive types.
+ */
 export class TypeHelper
 {
     /**
@@ -8,7 +10,14 @@ export class TypeHelper
      */
     private constructor() { }
     
-    
+    /**
+     * @description Checks if the type is boolean, if so returns the value else 
+     * does a type conversion on `value` and check if it string value is `"true"` or  `"false"` 
+     * then returns the corresponding boolean value. Returns `null` if the value is incorrect.
+     * 
+     * @param value - The value being type converted.
+     * @returns The boolean value or null.
+     */
     public static parseBoolean(value: any): boolean | null
     {
         if (value == null)
@@ -28,6 +37,13 @@ export class TypeHelper
         return null;
     }
     
+    /**
+     * @description Checks if the type is number, if so returns the `value` else 
+     * does a type conversion on `value` and check if it string value is a number. 
+     * Returns `null` if the value is incorrect.
+     * 
+     * @param value - The value being type converted.
+     */
     public static parseNumber(value: any): number | null
     {
         if (value == null)
@@ -47,14 +63,20 @@ export class TypeHelper
         
         return null;
     }
-    
+
+    /**
+     * @description Converts the enum, `enumClass` to a tuple of this format `[[var1, val1], [var2, var2], ...]`.
+     * 
+     * @param enumClass - The enumClass being converted to tuple.
+     * @returns The converted tuple.
+     */
     public static enumTypeToTuples<T extends string | number>(enumClass: object): ReadonlyArray<[string, T]>
     {
         given(enumClass, "enumClass").ensureHasValue().ensureIsObject();
         
         return this.getEnumTuples(enumClass) as any;
     }
-    
+
     private static getEnumTuples(enumType: object): ReadonlyArray<[string, string | number]>
     {
         const keys = Object.keys(enumType);

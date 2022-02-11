@@ -1,7 +1,9 @@
 import { given } from "@nivinjoseph/n-defensive";
 import { Buffer } from "buffer";
 
-
+/**
+ * @description A class used to assist with the processing of images.
+ */
 export class ImageHelper
 {
     /**
@@ -9,7 +11,12 @@ export class ImageHelper
      */
     private constructor() { }
     
-    
+    /**
+     * @description Creates a buffer for a given `dataUrl`.
+     * 
+     * @param dataUrl - The Url that contains data.
+     * @returns The buffer.
+     */
     public static dataUrlToBuffer(dataUrl: string): Buffer
     {
         given(dataUrl, "dataUrl").ensureHasValue().ensureIsString();

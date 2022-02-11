@@ -2,7 +2,9 @@ import { given } from "@nivinjoseph/n-defensive";
 import { ArgumentException, InvalidArgumentException } from "@nivinjoseph/n-exception";
 import { TypeHelper } from "./type-helper";
 
-
+/**
+ * @description A class used to help with version of the format, `#.#.#` where "#" denotes a number.
+ */
 export class Version
 {
     private readonly _major: number;
@@ -42,7 +44,12 @@ export class Version
         this._patch = patch;
     }
     
-    
+    /**
+     * @description Checks if the version is equal to another.
+     * 
+     * @param version - The version being checked.
+     * @returns A boolean.
+     */
     public equals(version: Version): boolean
     {
         given(version, "version").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Version);
@@ -50,6 +57,12 @@ export class Version
         return version.major === this.major && version.minor === this.minor && version.patch === this.patch;
     }
     
+    /**
+     * @description Compares the current version to a given `version`. 
+     * 
+     * @param version - The version being checked.
+     * @returns 1 if the `version` is newer, -1 if the `version` is older, else 0 if the `version` is the same.
+     */
     public compareTo(version: Version): number
     {
         given(version, "version").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Version);

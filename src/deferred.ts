@@ -1,3 +1,6 @@
+/**
+ * @description A class used to defer a promise.
+ */
 export class Deferred<T>
 {
     private readonly _promise: Promise<T>;
@@ -17,11 +20,23 @@ export class Deferred<T>
         });
     }
 
+    /**
+     * @description Adds a resolve value, `value` to the deferred promise. Use 
+     * the getter `promise()` to retrieve the promise.
+     * 
+     * @param value - The value to resolve.
+     */
     public resolve(value?: T): void
     {
         this._resolve(value);
     }
 
+    /**
+     * @description Adds a reject reason, `reason` to the deferred promise. Use 
+     * the getter `promise()` to retrieve the promise.
+     * 
+     * @param value - The value to resolve.
+     */
     public reject(reason?: any): void
     {
         this._reject(reason);

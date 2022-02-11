@@ -4,18 +4,35 @@ import { Uuid } from "./uuid";
 
 export interface Observable<T>
 {
+    /**
+     * @description Creates a subscription to the event that executes callback when it is notified.
+     * 
+     * @param callback - The callback to execute after it is notified .
+     * @returns A subscription to the event.
+     */
     subscribe(callback: (eventData: T) => void): Subscription;
 }
 
 
 export interface Subscription
 {
+    /**
+     * @description The name of the event.
+     */
     readonly event: string;
+    /**
+     * @description The boolean indicating if the 
+     */
     readonly isUnsubscribed: boolean;
+    /**
+     * @description Unsubscribes from the subscription
+     */
     unsubscribe(): void;
 }
 
-
+/**
+ * @description A class used to create event subscriptions using the Observer Pattern.
+ */
 export class Observer<T> implements Observable<T>
 {
     private readonly _event: string;
@@ -25,14 +42,17 @@ export class Observer<T> implements Observable<T>
     public get event(): string { return this._event; }
     public get hasSubscriptions(): boolean { return this._subMap.size > 0; }
 
-
+    /**
+     * @description Creates the observer with the event name, `event`.
+     * 
+     * @param event The name of the event.
+     */
     public constructor(event: string)
     {
         given(event, "event").ensureHasValue().ensureIsString();
         this._event = event.trim();
     }
-    
-    
+
     public subscribe(callback: (eventData: T) => void): Subscription
     {
         given(callback, "callback").ensureHasValue().ensureIsFunction();
@@ -53,6 +73,12 @@ export class Observer<T> implements Observable<T>
         return subscription;
     }
 
+    /**
+     * @description Notify the subscriptions that an event has been executed and invokes the subscription's callback
+     * with `eventData`.
+     * 
+     * @param eventData - The data given to the subscription callback.
+     */
     public notify(eventData: T): void
     {
         // no defensive check cuz eventData can be void

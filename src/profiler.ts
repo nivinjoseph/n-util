@@ -1,6 +1,9 @@
 import { given } from "@nivinjoseph/n-defensive";
 
 // public
+/**
+ * @description A class used to profile and trace code execution.
+ */
 export class Profiler
 {
     private readonly _id: string;
@@ -23,7 +26,12 @@ export class Profiler
         }];
     }
     
-    
+    /**
+     * 
+     * Creates a trace point for a profiler.
+     * 
+     * @param message - A message for the trace point's context.
+     */
     public trace(message: string): void
     {
         given(message, "message").ensureHasValue().ensureIsString();
