@@ -8,7 +8,6 @@ import { TypeHelper } from "./type-helper";
 
 export class DateTime extends Serializable<DateTimeSchema>
 {
-
     private static readonly _format = "yyyy-MM-dd HH:mm";
 
     private readonly _value: string;
@@ -104,7 +103,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from a number of seconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
+    * Create a DateTime from the number of seconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
     *
     * @param timestamp - number of seconds since 1970 UTC
     * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
@@ -122,7 +121,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from a number of seconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
+    * Create a DateTime from the milliseconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
     *
     * @param milliseconds -  number of milliseconds since the epoch (meaning since 1 January 1970 00:00:00 UTC)
     * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment,

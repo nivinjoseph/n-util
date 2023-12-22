@@ -2,7 +2,6 @@ import * as Assert from "assert";
 import { DateTime } from "../../src/date-time";
 import { Duration } from "../../src";
 import { given } from "@nivinjoseph/n-defensive";
-import { IANAZone } from "luxon";
 import { ArgumentException } from "@nivinjoseph/n-exception";
 
 
@@ -71,11 +70,9 @@ suite("DateTime Comparison", () =>
     function testDifferentZones(compareFunction: (value: string, behindZone: string, aheadZone: string, diff: string,
         timeDiff: Duration, daysDiff: number) => void): void
     {
-        const value = "2024-01-01 10:00";
-
         // Compare same value but different zones utc and IST (UTC+5:30)
         compareFunction(
-            value,
+            "2024-01-01 10:00",
             "utc",
             "UTC+5:30",
             "5 hour 30 minute",
@@ -84,28 +81,42 @@ suite("DateTime Comparison", () =>
         );
 
         // Compare same value but different zones America/Los_Angeles and utc
-        // could be 7 or 8 based on Daylight savings
-        const diffHourInDstToUtc = Math.abs(Number.parseInt(
-            IANAZone.create("America/Los_Angeles").formatOffset(Date.now(), "narrow")));
+        // could be 7 or 8 based on Daylight savings8
         compareFunction(
-            value,
+            "2024-01-01 10:00",
             "America/Los_Angeles",
             "utc",
-            `${diffHourInDstToUtc} hours`,
-            Duration.fromHours(diffHourInDstToUtc),
+            `8 hours`,
+            Duration.fromHours(8),
+            0
+        );
+
+        compareFunction(
+            "2024-06-01 10:00",
+            "America/Los_Angeles",
+            "utc",
+            `7 hours`,
+            Duration.fromHours(7),
             0
         );
 
         // Compare same value but different zones America/Los_Angeles and IST(UTC+5:30)
         // could be 12.5 or 13.5 based on Daylight savings
-        const diffHourInDstToIst = Math.abs(Number.parseInt(
-            IANAZone.create("America/Los_Angeles").formatOffset(Date.now(), "narrow"))) + 5.5;
         compareFunction(
-            value,
+            "2024-01-01 10:00",
             "America/Los_Angeles",
             "UTC+5:30",
-            `${diffHourInDstToIst} hours`,
-            Duration.fromHours(diffHourInDstToIst),
+            `13 hours 30 minutes`,
+            Duration.fromHours(13.5),
+            0
+        );
+
+        compareFunction(
+            "2024-06-01 10:00",
+            "America/Los_Angeles",
+            "UTC+5:30",
+            `12 hours 30 minutes`,
+            Duration.fromHours(12.5),
             0
         );
     }

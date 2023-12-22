@@ -1,6 +1,6 @@
 import * as Assert from "assert";
 import { DateTime } from "../../src/date-time";
-import { IANAZone, DateTime as LuxonDateTime } from "luxon";
+import { DateTime as LuxonDateTime } from "luxon";
 import { ArgumentException } from "@nivinjoseph/n-exception";
 
 
@@ -206,7 +206,7 @@ suite("DateTime Utility", () =>
         const value1 = "2024-02-29 18:30";
         test(`Given a valid value (${value1}) and zone (utc)
         when a DateTime is created from that value and zone
-        then toStringDateTime() on that dateTime should return the passed in value`,
+        then toStringISO() on that dateTime should return "2024-02-29T18:30:00.000Z"`,
             () =>
             {
                 Assert.strictEqual(new DateTime({ value: value1, zone: "utc" }).toStringISO(), "2024-02-29T18:30:00.000Z");
@@ -216,7 +216,7 @@ suite("DateTime Utility", () =>
         const value2 = "1986-08-17 15:57";
         test(`Given a valid value (${value2}) and zone (utc)
         when a DateTime is created from that value and zone
-        then toStringDateTime() on that dateTime should return the passed in value`,
+        then toStringISO() on that dateTime should return "1986-08-17T15:57:00.000Z"`,
             () =>
             {
                 Assert.strictEqual(new DateTime({ value: value2, zone: "utc" }).toStringISO(), "1986-08-17T15:57:00.000Z");
@@ -232,13 +232,21 @@ suite("DateTime Utility", () =>
             }
         );
 
-        const dstUtcOffset = IANAZone.create("America/Los_Angeles").formatOffset(Date.now(), "short"); // for correct offset in DST
         test(`Given a valid value (${value}) and zone (America/Los_Angeles)
         when a DateTime is created from that value and zone
-        then toStringISO() on that dateTime should return "2024-01-01T10:00:00.000${dstUtcOffset}"`,
+        then toStringISO() on that dateTime should return "2024-01-01T10:00:00.000-08:00"`,
             () =>
             {
-                Assert.strictEqual(new DateTime({ value, zone: "America/Los_Angeles" }).toStringISO(), `2024-01-01T10:00:00.000${dstUtcOffset}`);
+                Assert.strictEqual(new DateTime({ value, zone: "America/Los_Angeles" }).toStringISO(), `2024-01-01T10:00:00.000-08:00`);
+            }
+        );
+
+        test(`Given a valid value (2024-06-01 10:00) and zone (America/Los_Angeles)
+        when a DateTime is created from that value and zone
+        then toStringISO() on that dateTime should return "2024-06-01T10:00:00.000-07:00"`,
+            () =>
+            {
+                Assert.strictEqual(new DateTime({ value: "2024-06-01 10:00", zone: "America/Los_Angeles" }).toStringISO(), `2024-06-01T10:00:00.000-07:00`);
             }
         );
     });
