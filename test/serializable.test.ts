@@ -8,7 +8,7 @@ type AddressSchema = {
     street: string;
     locality: string;
 };
-@serialize
+@serialize("Main")
 class Address extends Serializable<AddressSchema>
 {
     private readonly _street: string;
@@ -50,7 +50,7 @@ interface FullName
     lastName: string;
 }
 
-@serialize
+@serialize("Main")
 class Dummy extends Serializable
 {
     public constructor()
@@ -64,7 +64,7 @@ class Dummy extends Serializable
     }
 }
 
-@serialize
+@serialize("Main")
 class Employee extends Serializable
 {
     private readonly _id: string;
@@ -106,7 +106,7 @@ class Employee extends Serializable
 }
 
 
-@serialize
+@serialize("Dum")
 class Dummy2 extends Dummy
 {
     @serialize
@@ -129,9 +129,32 @@ class Dummy2 extends Dummy
     }
 }
 
+@serialize("TEST")
+class SerializePrefix extends Serializable
+{
+    @serialize
+    public get field1(): string { return "SerializePrefix Field 1"; }
+
+    @serialize("newKeyForField2")
+    public get field2(): string { return "SerializePrefix Field 2"; }
+}
+
+@serialize("Blah")
+class SerializePrefixChildNoPrefix extends SerializePrefix
+{
+    @serialize
+    public get field3(): string { return "SerializePrefixChildNoPrefix Field 3"; }
+}
+
+@serialize("PREFIX")
+class SerializePrefixChildWithPrefix extends SerializePrefix
+{
+    @serialize
+    public get field3(): string { return "SerializePrefixChildWithPrefix Field 3"; }
+}
 
 
-@serialize
+@serialize("TT")
 class Dummy3 extends Dummy2
 {
     @serialize
@@ -145,7 +168,7 @@ class Dummy3 extends Dummy2
 }
 
 
-await describe("Serializable", async () =>
+await describe.only("Serializable", async () =>
 {
     await describe("serialize", async () =>
     {
@@ -176,12 +199,12 @@ await describe("Serializable", async () =>
                 "address": {
                     "street": "911 Roger rd",
                     "locality": "Waterloo",
-                    "$typename": "Address"
+                    "$typename": "Main.Address"
                 },
                 "dummy": {
-                    "$typename": "Dummy"
+                    "$typename": "Main.Dummy"
                 },
-                "$typename": "Employee"
+                "$typename": "Main.Employee"
             });
 
             const testObj2 = new Employee({
@@ -230,7 +253,7 @@ await describe("Serializable", async () =>
             const serializedDummy = dummy.serialize();
             console.log(serializedDummy);
             assert.deepStrictEqual(serializedDummy, {
-                "$typename": "Dummy"
+                "$typename": "Main.Dummy"
             });
             const deserializedDummy = Deserializer.deserialize<Dummy>(serializedDummy);
             assert.ok(deserializedDummy instanceof Dummy);
@@ -242,7 +265,7 @@ await describe("Serializable", async () =>
                 "field1": "Dummy2 Field 1",
                 "field2Key": "Dummy2 Field 2",
                 "field3": "Dummy2 Field 3",
-                "$typename": "Dummy2"
+                "$typename": "Dum.Dummy2"
             });
             const deserializedDummy2 = Deserializer.deserialize<Dummy2>(serializedDummy2);
             assert.ok(deserializedDummy2 instanceof Dummy2);
@@ -256,11 +279,61 @@ await describe("Serializable", async () =>
                 "newKeyForField2": "Dummy3 Field 2",
                 "field3": "Dummy2 Field 3",
                 "field4": "Dummy3 Field 4",
-                "$typename": "Dummy3"
+                "$typename": "TT.Dummy3"
             });
 
             const deserializedDummy3 = Deserializer.deserialize<Dummy3>(serializedDummy3);
             assert.ok(deserializedDummy3 instanceof Dummy3);
         });
+    });
+
+    await test("with prefix", () =>
+    {
+        const newName = new SerializePrefix({});
+        const newNameSerialized = newName.serialize();
+
+        assert.deepStrictEqual(newNameSerialized, {
+            "field1": "SerializePrefix Field 1",
+            "newKeyForField2": "SerializePrefix Field 2",
+            "$typename": "TEST.SerializePrefix"
+        });
+
+        const deserialized = Deserializer.deserialize(newNameSerialized);
+
+        assert.ok(deserialized instanceof SerializePrefix);
+    });
+
+    await test("prefixed child", () =>
+    {
+        const newName = new SerializePrefixChildNoPrefix({});
+        const newNameSerialized = newName.serialize();
+
+        assert.deepStrictEqual(newNameSerialized, {
+            "field1": "SerializePrefix Field 1",
+            "newKeyForField2": "SerializePrefix Field 2",
+            "field3": "SerializePrefixChildNoPrefix Field 3",
+            "$typename": "Blah.SerializePrefixChildNoPrefix"
+        });
+
+        const deserialized = Deserializer.deserialize(newNameSerialized);
+
+        assert.ok(deserialized instanceof SerializePrefixChildNoPrefix);
+    });
+
+    await test("prefixed child with prefix", () =>
+    {
+        const newName = new SerializePrefixChildWithPrefix({});
+        const newNameSerialized = newName.serialize();
+
+        assert.deepStrictEqual(newNameSerialized, {
+            "field1": "SerializePrefix Field 1",
+            "newKeyForField2": "SerializePrefix Field 2",
+            "field3": "SerializePrefixChildWithPrefix Field 3",
+            "$typename": "PREFIX.SerializePrefixChildWithPrefix"
+        });
+
+        const deserialized = Deserializer.deserialize(newNameSerialized);
+
+        assert.ok(deserialized instanceof SerializePrefixChildWithPrefix);
     });
 });

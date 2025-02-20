@@ -5,7 +5,7 @@ import { Duration } from "./duration.js";
 import { Schema } from "./utility-types.js";
 import { TypeHelper } from "./type-helper.js";
 
-@serialize
+@serialize("Nutil")
 export class DateTime extends Serializable<DateTimeSchema>
 {
 
@@ -419,7 +419,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * 
+     *
      * @returns the difference in instant seconds
      */
     public timeDiff(value: DateTime): Duration
@@ -430,7 +430,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * 
+     *
      * @returns the difference in calendar days
      */
     public daysDiff(value: DateTime): number
@@ -450,7 +450,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Adds duration in milliseconds and increases the timestamp by the right number of milliseconds. 
+    * Adds duration in milliseconds and increases the timestamp by the right number of milliseconds.
     * this accounts for shift in DST
     */
     public addTime(time: Duration): DateTime
@@ -464,7 +464,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * Subtracts duration in milliseconds and decreases the timestamp by the right number of milliseconds. 
+     * Subtracts duration in milliseconds and decreases the timestamp by the right number of milliseconds.
      * this accounts for shift in DST
      */
     public subtractTime(time: Duration): DateTime
@@ -508,11 +508,11 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * 
-    * @returns array of DateTime objects. 
-    * First element is the start of the month (Eg: 2023-06-01 00:00)  
+    *
+    * @returns array of DateTime objects.
+    * First element is the start of the month (Eg: 2023-06-01 00:00)
     * Last element is the end of the month (Eg: 2023-06-30 23:59)
-    * Element in between represent the start of the day of the month (Eg: 2023-06-11 00:00)  
+    * Element in between represent the start of the day of the month (Eg: 2023-06-11 00:00)
     */
     public getDaysOfMonth(): Array<DateTime>
     {
@@ -553,7 +553,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * 
+     *
      * @param startTimeCode inclusive
      * @param endTimeCode inclusive
      */
