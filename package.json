@@ -1,6 +1,6 @@
 {
     "name": "@nivinjoseph/n-util",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "description": "Utility functions",
     "packageManager": "yarn@4.0.2",
     "type": "module",
