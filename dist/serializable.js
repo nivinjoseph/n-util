@@ -7,7 +7,7 @@ export class Serializable {
         given(data, "data").ensureHasValue().ensureIsObject();
     }
     serialize() {
-        const typeName = this.getTypeName();
+        const classInfo = Utilities.fetchSerializableClassInfoForObject(this);
         const fields = Utilities.fetchSerializableFieldsForObject(this);
         const serialized = fields.reduce((acc, field) => {
             const val = field.target.call(this);
@@ -38,7 +38,8 @@ export class Serializable {
             }
             return acc;
         }, {});
-        serialized.$typename = typeName;
+        // add prefix here...
+        serialized.$typename = classInfo.typeName;
         return serialized;
     }
 }
@@ -56,9 +57,12 @@ export class Deserializer {
             return false;
         return true;
     }
-    static registerType(type) {
-        given(type, "type").ensureHasValue();
-        const typeName = type.getTypeName();
+    static registerType(type, serializeInfo) {
+        given(type, "type").ensureHasValue()
+            .ensure(t => t.prototype instanceof Serializable, "type does not extend Serializable");
+        given(serializeInfo, "serializeInfo").ensureIsObject();
+        serializeInfo ??= Utilities.fetchSerializableInfoForClass(type);
+        const typeName = serializeInfo.typeName;
         if (!this._typeCache.has(typeName))
             this._typeCache.set(typeName, type);
     }
@@ -146,10 +150,29 @@ class Utilities {
         given(className, className)
             .ensure(t => {
             const key = this._fetchSerializableClassKey(t);
-            const isSerializable = val.constructor[Symbol.metadata][key];
-            return isSerializable === true;
+            const isSerializable = val.constructor[Symbol.metadata][key] != null;
+            return isSerializable;
         }, `class '${className}' should have the serialize decorator`);
         return fields;
+    }
+    static fetchSerializableClassInfoForObject(val) {
+        const meta = val.constructor[Symbol.metadata];
+        if (meta == null)
+            throw new ApplicationException(`No metadata found on the class '${val.constructor.name}'`);
+        const info = meta[this._fetchSerializableClassKey(val.constructor.name)];
+        if (info == null)
+            throw new ApplicationException(`class '${val.constructor.name}' should have a serialize decorator`);
+        return info;
+    }
+    static fetchSerializableInfoForClass(target) {
+        given(target, "target").ensureHasValue().ensureIsFunction();
+        const meta = target[Symbol.metadata];
+        if (meta == null)
+            throw new ApplicationException(`no metadata found on class ${target.getTypeName()}`);
+        const serializableInfo = meta[this._fetchSerializableClassKey(target.getTypeName())];
+        if (serializableInfo == null)
+            throw new ApplicationException(`class '${target.getTypeName()}' should have a serialize decorator`);
+        return serializableInfo;
     }
     static configureMetaOnContext(context, target, key) {
         given(context, "context").ensureHasValue().ensureIsObject();
@@ -175,20 +198,27 @@ class Utilities {
             context.addInitializer(function () {
                 const className = this.constructor.name;
                 given(className, "className")
-                    .ensure(t => this.constructor[Symbol.metadata][Utilities._fetchSerializableClassKey(t)] === true, `class '${className}' does not have the serialize decorator`);
+                    .ensure(t => this.constructor[Symbol.metadata][Utilities._fetchSerializableClassKey(t)] != null, `class '${className}' does not have the serialize decorator`);
             });
         }
         else {
             given(target, "target")
                 .ensure(t => t.prototype instanceof Serializable, `class '${context.name}' decorated with serialize must extend Serializable`);
-            Deserializer.registerType(target);
-            const key = Utilities._fetchSerializableClassKey(context.name);
-            context.metadata[key] = true;
+            const prefix = key;
+            given(prefix, "prefix").ensureHasValue().ensureIsString();
+            const info = {
+                className: target.getTypeName(),
+                prefix,
+                typeName: `${prefix}.${context.name}`
+            };
+            const serializeKey = this._fetchSerializableClassKey(context.name);
+            context.metadata[serializeKey] = info;
+            Deserializer.registerType(target, info);
         }
     }
     static _fetchSerializableClassKey(className) {
         given(className, "className").ensureHasValue().ensureIsString();
-        return Symbol.for(`@nivinjoseph/n-util/serializable/${className}/isSerializable`);
+        return Symbol.for(`@nivinjoseph/n-util/serializable/${className}/info`);
     }
     static _fetchSerializableFieldsKey() {
         return Symbol.for("@nivinjoseph/n-util/serializable/fields");

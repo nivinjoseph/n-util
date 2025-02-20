@@ -10,14 +10,21 @@ export declare class Deserializer {
      */
     private constructor();
     static hasType(typeName: string): boolean;
-    static registerType(type: object | Function): void;
+    static registerType(type: SerializableClass<any>, serializeInfo?: SerializableClassInfo): void;
     static deserialize<T>(serialized: object): T;
     private static _getType;
 }
-export declare function serialize<Class extends Serializable>(target: SerializableClass<Class>, context: ClassDecoratorContext<SerializableClass<Class>>): void;
 export declare function serialize<Class extends Serializable, T>(target: SerializableClassGetter<Class, T>, context: ClassGetterDecoratorContext<Class, T>): void;
-export declare function serialize<Class extends Serializable, T>(key: string): SerializeGetterDecorator<Class, T>;
+export declare function serialize<Class extends Serializable, T, K extends string>(key: K extends "" ? never : K): UniversalSerializeDecorator<Class, T>;
 export type SerializableClass<This extends Serializable> = ClassDefinition<This>;
 export type SerializableClassGetter<This extends Serializable, T> = (this: This) => T;
+export type SerializeClassDecorator<Class extends Serializable> = (target: SerializableClass<Class>, context: ClassDecoratorContext<SerializableClass<Class>>) => void;
 export type SerializeGetterDecorator<Class extends Serializable, T> = (target: SerializableClassGetter<Class, T>, context: ClassGetterDecoratorContext<Class, T>) => void;
+interface SerializableClassInfo {
+    className: string;
+    prefix?: string;
+    typeName: string;
+}
+type UniversalSerializeDecorator<Class extends Serializable, T> = (target: SerializableClass<Class> | SerializableClassGetter<Class, T>, context: ClassDecoratorContext<SerializableClass<Class>> | ClassGetterDecoratorContext<Class, T>) => void;
+export {};
 //# sourceMappingURL=serializable.d.ts.map

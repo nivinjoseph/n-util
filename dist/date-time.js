@@ -5,7 +5,7 @@ import { Serializable, serialize } from "./serializable.js";
 import { Duration } from "./duration.js";
 import { TypeHelper } from "./type-helper.js";
 let DateTime = (() => {
-    let _classDecorators = [serialize];
+    let _classDecorators = [serialize("Nutil")];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
