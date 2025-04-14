@@ -5,10 +5,20 @@ import { Duration } from "./duration.js";
 import { Schema } from "./utility-types.js";
 import { TypeHelper } from "./type-helper.js";
 
+/**
+ * A robust date and time handling system with timezone support.
+ * This class provides comprehensive functionality for date/time manipulation, comparison, and formatting.
+ * 
+ * @example
+ * ```typescript
+ * const now = DateTime.now("UTC");
+ * const future = now.addTime(Duration.fromHours(2));
+ * const isAfter = future.isAfter(now);
+ * ```
+ */
 @serialize("Nutil")
 export class DateTime extends Serializable<DateTimeSchema>
 {
-
     private static readonly _format = "yyyy-MM-dd HH:mm";
 
     private readonly _value: string;
@@ -22,29 +32,66 @@ export class DateTime extends Serializable<DateTimeSchema>
 
 
     /**
-     * @returns system's local timezone
+     * Gets the system's local timezone.
+     * 
+     * @returns The local timezone identifier.
      */
     public static get currentZone(): string { return LuxonDateTime.local().zoneName; }
 
 
+    /**
+     * Gets the formatted date and time string.
+     */
     @serialize
     public get value(): string { return this._value; }
 
+    /**
+     * Gets the timezone identifier.
+     */
     @serialize
     public get zone(): string { return this._zone; }
 
+    /**
+     * Gets the Unix timestamp in seconds.
+     */
     public get timestamp(): number { return this._timestamp; }
 
+    /**
+     * Gets the date code in YYYYMMDD format.
+     */
     public get dateCode(): string { return this._dateCode; }
+
+    /**
+     * Gets the time code in HHMM format.
+     */
     public get timeCode(): string { return this._timeCode; }
 
+    /**
+     * Gets the date value in YYYY-MM-DD format.
+     */
     public get dateValue(): string { return this._dateValue; }
+
+    /**
+     * Gets the time value in HH:mm format.
+     */
     public get timeValue(): string { return this._timeValue; }
 
+    /**
+     * Gets whether this DateTime is in the past.
+     */
     public get isPast(): boolean { return this.isBefore(DateTime.now()); }
+
+    /**
+     * Gets whether this DateTime is in the future.
+     */
     public get isFuture(): boolean { return this.isAfter(DateTime.now()); }
 
-
+    /**
+     * Creates a new DateTime instance.
+     * 
+     * @param data - The DateTime data containing value and zone.
+     * @throws Error if the value or zone is invalid.
+     */
     public constructor(data: DateTimeSchema)
     {
         super(data);
@@ -79,9 +126,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         this._timeValue = time;
     }
 
+
     /**
-     * @param zone :  a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-     * If none specified, will use UTC
+     * Creates a DateTime instance for the current time.
+     * 
+     * @param zone - The timezone identifier. If not specified, UTC is used.
+     * @returns A new DateTime instance representing the current time.
      */
     public static now(zone?: string): DateTime
     {
@@ -104,11 +154,12 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from the number of seconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
-    *
-    * @param timestamp - number of seconds since 1970 UTC
-    * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-    */
+     * Creates a DateTime from a Unix timestamp.
+     * 
+     * @param timestamp - The number of seconds since the Unix epoch.
+     * @param zone - The timezone identifier.
+     * @returns A new DateTime instance.
+     */
     public static createFromTimestamp(timestamp: number, zone: string): DateTime
     {
         given(timestamp, "timestamp").ensureHasValue().ensureIsNumber();
@@ -122,12 +173,12 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from the milliseconds since the epoch (meaning since 1 January 1970 00:00:00 UTC).
-    *
-    * @param milliseconds -  number of milliseconds since the epoch (meaning since 1 January 1970 00:00:00 UTC)
-    * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment,
-    *  or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-    */
+     * Creates a DateTime from milliseconds since the Unix epoch.
+     * 
+     * @param milliseconds - The number of milliseconds since the Unix epoch.
+     * @param zone - The timezone identifier.
+     * @returns A new DateTime instance.
+     */
     public static createFromMilliSecondsSinceEpoch(milliseconds: number, zone: string): DateTime
     {
         given(milliseconds, "milliseconds").ensureHasValue().ensureIsNumber();
@@ -141,12 +192,13 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from dateCode and timeCode.
-    *
-    * @param dateCode - dateCode as 8 digit number first four represent year, next two the month and last two day
-    * @param timeCode - timeCode as 4 digit number first two represent hour and last two minute
-    * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-    */
+     * Creates a DateTime from date and time codes.
+     * 
+     * @param dateCode - The date code in YYYYMMDD format.
+     * @param timeCode - The time code in HHMM format.
+     * @param zone - The timezone identifier.
+     * @returns A new DateTime instance.
+     */
     public static createFromCodes(dateCode: string, timeCode: string, zone: string): DateTime
     {
         given(dateCode, "dateCode").ensureHasValue().ensureIsString()
@@ -176,12 +228,13 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Create a DateTime from date and time.
-    *
-    * @param dateValue - date in the format YYYY-MM-DD
-    * @param timeCode - time in the format hh:mm
-    * @param zone - a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-    */
+     * Creates a DateTime from date and time values.
+     * 
+     * @param dateValue - The date in YYYY-MM-DD format.
+     * @param timeValue - The time in HH:mm format.
+     * @param zone - The timezone identifier.
+     * @returns A new DateTime instance.
+     */
     public static createFromValues(dateValue: string, timeValue: string, zone: string): DateTime
     {
         given(dateValue, "dateValue").ensureHasValue().ensureIsString()
@@ -200,6 +253,13 @@ export class DateTime extends Serializable<DateTimeSchema>
         });
     }
 
+    /**
+     * Returns the earlier of two DateTime instances.
+     * 
+     * @param dateTime1 - The first DateTime instance.
+     * @param dateTime2 - The second DateTime instance.
+     * @returns The earlier DateTime instance.
+     */
     public static min(dateTime1: DateTime, dateTime2: DateTime): DateTime
     {
         given(dateTime1, "dateTime1").ensureHasValue().ensureIsType(DateTime);
@@ -211,6 +271,13 @@ export class DateTime extends Serializable<DateTimeSchema>
         return dateTime2;
     }
 
+    /**
+     * Returns the later of two DateTime instances.
+     * 
+     * @param dateTime1 - The first DateTime instance.
+     * @param dateTime2 - The second DateTime instance.
+     * @returns The later DateTime instance.
+     */
     public static max(dateTime1: DateTime, dateTime2: DateTime): DateTime
     {
         given(dateTime1, "dateTime1").ensureHasValue().ensureIsType(DateTime);
@@ -222,6 +289,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         return dateTime2;
     }
 
+    /**
+     * Validates if a string matches the DateTime format "yyyy-MM-dd HH:mm".
+     * 
+     * @param value - The string to validate.
+     * @returns True if the string matches the format, false otherwise.
+     */
     public static validateDateTimeFormat(value: string): boolean
     {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -231,6 +304,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         return LuxonDateTime.fromFormat(value, DateTime._format).isValid;
     }
 
+    /**
+     * Validates if a string matches the date format "yyyy-MM-dd".
+     * 
+     * @param value - The string to validate.
+     * @returns True if the string matches the format, false otherwise.
+     */
     public static validateDateFormat(value: string): boolean
     {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -240,6 +319,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         return LuxonDateTime.fromFormat(value, "yyyy-MM-dd").isValid;
     }
 
+    /**
+     * Validates if a string matches the time format  "HH:mm".
+     * 
+     * @param value - The string to validate.
+     * @returns True if the string matches the format, false otherwise.
+     */
     public static validateTimeFormat(value: string): boolean
     {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -249,6 +334,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         return LuxonDateTime.fromFormat(value, "HH:mm").isValid;
     }
 
+    /**
+     * Validates if a string is a valid timezone.
+     * 
+     * @param zone - The timezone string to validate.
+     * @returns True if the timezone is valid, false otherwise.
+     */
     public static validateTimeZone(zone: string): boolean
     {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -268,6 +359,13 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
 
+    /**
+     * Validates a timezone string.
+     * 
+     * @param zone - The timezone string to validate.
+     * @throws Error if the timezone is invalid.
+     * @private
+     */
     private static _validateZone(zone: string): void
     {
         zone = zone.trim();
@@ -321,11 +419,22 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
 
+    /**
+     * Gets the numeric value of this DateTime.
+     * 
+     * @returns The milliseconds since the Unix epoch.
+     */
     public override valueOf(): number
     {
         return this._dateTime.valueOf();
     }
 
+    /**
+     * Compares this DateTime with another for equality.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if the DateTime instances are equal, false otherwise.
+     */
     public equals(value?: DateTime | null): boolean
     {
         given(value, "value").ensureIsType(DateTime);
@@ -339,24 +448,41 @@ export class DateTime extends Serializable<DateTimeSchema>
         return value.value === this._value && value.zone === this._zone;
     }
 
+    /**
+     * Returns the string representation of this DateTime.
+     * 
+     * @returns The string representation in the format "YYYY-MM-DD HH:mm zone".
+     */
     public override toString(): string
     {
         return `${this._value} ${this._zone}`;
     }
 
+    /**
+     * Returns the date and time string.
+     * 
+     * @returns The string in the format "YYYY-MM-DD HH:mm".
+     */
     public toStringDateTime(): string
     {
         return this._value;
     }
 
+    /**
+     * Returns the ISO string representation.
+     * 
+     * @returns The ISO 8601 string representation.
+     */
     public toStringISO(): string
     {
         return this._dateTime.toISO({ format: "extended", includeOffset: true })!;
     }
 
     /**
-     * @param value
-     * @returns true if this is the same instant in time as value, otherwise false
+     * Checks if this DateTime represents the same instant as another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if the DateTime instances represent the same instant, false otherwise.
      */
     public isSame(value: DateTime): boolean
     {
@@ -366,8 +492,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * @param value
-     * @returns true if this occurs before value, otherwise false
+     * Checks if this DateTime is before another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if this DateTime is before the other, false otherwise.
      */
     public isBefore(value: DateTime): boolean
     {
@@ -377,8 +505,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * @param value
-     * @returns true if this is the same instant in time as value or occurs before, otherwise false
+     * Checks if this DateTime is the same or before another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if this DateTime is the same or before the other, false otherwise.
      */
     public isSameOrBefore(value: DateTime): boolean
     {
@@ -388,8 +518,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * @param value
-     * @returns true if this occurs after value, otherwise false
+     * Checks if this DateTime is after another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if this DateTime is after the other, false otherwise.
      */
     public isAfter(value: DateTime): boolean
     {
@@ -399,8 +531,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * @param value
-     * @returns true if this is the same instant in time as value or occurs after, otherwise false
+     * Checks if this DateTime is the same or after another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if this DateTime is the same or after the other, false otherwise.
      */
     public isSameOrAfter(value: DateTime): boolean
     {
@@ -409,6 +543,14 @@ export class DateTime extends Serializable<DateTimeSchema>
         return this.valueOf() >= value.valueOf();
     }
 
+    /**
+     * Checks if this DateTime is between two others.
+     * 
+     * @param start - The start DateTime.
+     * @param end - The end DateTime.
+     * @returns True if this DateTime is between start and end, false otherwise.
+     * @throws Error if end is before start.
+     */
     public isBetween(start: DateTime, end: DateTime): boolean
     {
         given(start, "start").ensureHasValue().ensureIsType(DateTime);
@@ -419,8 +561,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     *
-     * @returns the difference in instant seconds
+     * Calculates the time difference between this DateTime and another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns A Duration representing the time difference.
      */
     public timeDiff(value: DateTime): Duration
     {
@@ -430,8 +574,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     *
-     * @returns the difference in calendar days
+     * Calculates the days difference between this DateTime and another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns The number of days difference.
      */
     public daysDiff(value: DateTime): number
     {
@@ -440,6 +586,12 @@ export class DateTime extends Serializable<DateTimeSchema>
         return Math.abs(Number.parseInt(this._dateTime.diff(value._dateTime, ["days"]).days.toString()));
     }
 
+    /**
+     * Checks if this DateTime is on the same day as another.
+     * 
+     * @param value - The DateTime to compare with.
+     * @returns True if the DateTime instances are on the same day, false otherwise.
+     */
     public isSameDay(value: DateTime): boolean
     {
         given(value, "value").ensureHasValue().ensureIsType(DateTime);
@@ -450,9 +602,11 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Adds duration in milliseconds and increases the timestamp by the right number of milliseconds.
-    * this accounts for shift in DST
-    */
+     * Adds a duration to this DateTime. this accounts for shift in DST
+     * 
+     * @param time - The duration to add.
+     * @returns A new DateTime instance with the duration added.
+     */
     public addTime(time: Duration): DateTime
     {
         given(time, "time").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Duration);
@@ -464,8 +618,10 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * Subtracts duration in milliseconds and decreases the timestamp by the right number of milliseconds.
-     * this accounts for shift in DST
+     * Subtracts a duration from this DateTime. this accounts for shift in DST
+     * 
+     * @param time - The duration to subtract.
+     * @returns A new DateTime instance with the duration subtracted.
      */
     public subtractTime(time: Duration): DateTime
     {
@@ -478,8 +634,11 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * Adds number of days in calendar days, this doesn't change time based on DST
-     * @param days number of calendar days to add
+     * Adds days to this DateTime. this doesn't change time based on DST
+     * 
+     * @param days - The number of days to add.
+     * @returns A new DateTime instance with the days added.
+     * @throws Error if days is not a positive integer.
      */
     public addDays(days: number): DateTime
     {
@@ -493,9 +652,12 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    * Subtracts number of days in calendar days, this doesn't change time based on DST
-    * @param days number of calendar days to subtract
-    */
+     * Subtracts days from this DateTime. this doesn't change time based on DST
+     * 
+     * @param days - The number of days to subtract.
+     * @returns A new DateTime instance with the days subtracted.
+     * @throws Error if days is not a positive integer.
+     */
     public subtractDays(days: number): DateTime
     {
         given(days, "days").ensureHasValue().ensureIsNumber()
@@ -508,12 +670,13 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-    *
-    * @returns array of DateTime objects.
-    * First element is the start of the month (Eg: 2023-06-01 00:00)
-    * Last element is the end of the month (Eg: 2023-06-30 23:59)
-    * Element in between represent the start of the day of the month (Eg: 2023-06-11 00:00)
-    */
+     * Gets an array of DateTime instances for each day of the month.
+     * 
+     * @returns An array of DateTime instances, where:
+     * - First element is the start of the month (e.g., "2023-06-01 00:00")
+     * - Last element is the end of the month (e.g., "2023-06-30 23:59")
+     * - Elements in between represent the start of each day (e.g., "2023-06-11 00:00")
+     */
     public getDaysOfMonth(): Array<DateTime>
     {
         const startOfMonth = this._dateTime.startOf("month");
@@ -532,9 +695,11 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     * @description Converts the current date time to a different time zone
-     * @param zone  a zone identifier. As a string, that can be any IANA zone supported by the host environment, or a fixed-offset name of the form 'UTC+3', or the string 'utc'.
-     * @returns a new DateTime object with the new zone
+     * Converts this DateTime to a different timezone.
+     * 
+     * @param zone - The target timezone.
+     * @returns A new DateTime instance in the specified timezone.
+     * @throws Error if the timezone is invalid.
      */
     public convertToZone(zone: string): DateTime
     {
@@ -553,9 +718,12 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 
     /**
-     *
-     * @param startTimeCode inclusive
-     * @param endTimeCode inclusive
+     * Checks if this DateTime is within a time range.
+     * 
+     * @param startTimeCode - The start time code in HHMM format.
+     * @param endTimeCode - The end time code in HHMM format.
+     * @returns True if this DateTime is within the time range, false otherwise.
+     * @throws Error if the time codes are invalid or if endTimeCode is before startTimeCode.
      */
     public isWithinTimeRange(startTimeCode: string, endTimeCode: string): boolean
     {
@@ -585,5 +753,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     }
 }
 
-
+/**
+ * Schema type for DateTime serialization.
+ */
 export type DateTimeSchema = Schema<DateTime, "value" | "zone">;
