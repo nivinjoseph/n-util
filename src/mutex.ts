@@ -1,12 +1,34 @@
 import { Deferred } from "./deferred.js";
 
-
+/**
+ * A simple implementation of a mutual exclusion lock for coordinating access to shared resources
+ * in asynchronous code. Ensures that only one piece of code can access a protected resource
+ * at a time, preventing race conditions in concurrent operations.
+ * 
+ * @example
+ * ```typescript
+ * const mutex = new Mutex();
+ * 
+ * async function protectedOperation() {
+ *     await mutex.lock();
+ *     try {
+ *         // Critical section
+ *         await doSomething();
+ *     } finally {
+ *         mutex.release();
+ *     }
+ * }
+ * ```
+ */
 export class Mutex
 {
     private readonly _deferreds: Array<Deferred<void>>;
     private _currentDeferred: Deferred<void> | null;
 
 
+    /**
+     * Creates a new mutex instance.
+     */
     public constructor()
     {
         this._deferreds = new Array<Deferred<void>>();
@@ -14,6 +36,24 @@ export class Mutex
     }
 
 
+    /**
+     * Acquires the mutex lock. Returns a promise that resolves when the lock is acquired.
+     * If the mutex is available, the promise resolves immediately. If the mutex is locked,
+     * the promise resolves when the lock becomes available. Multiple calls to lock() will
+     * be queued in FIFO order.
+     * 
+     * @returns A promise that resolves when the lock is acquired
+     * 
+     * @example
+     * ```typescript
+     * await mutex.lock();
+     * try {
+     *     // Critical section
+     * } finally {
+     *     mutex.release();
+     * }
+     * ```
+     */
     public lock(): Promise<void>
     {
         const deferred = new Deferred<void>();
@@ -27,11 +67,26 @@ export class Mutex
         return deferred.promise;
     }
 
+    /**
+     * Releases the mutex lock. If there are waiting operations, the next one in the queue
+     * will acquire the lock. If no operations are waiting, the mutex becomes available.
+     * This method should be called in a finally block to ensure the lock is always released.
+     * 
+     * @example
+     * ```typescript
+     * await mutex.lock();
+     * try {
+     *     // Critical section
+     * } finally {
+     *     mutex.release();
+     * }
+     * ```
+     */
     public release(): void
     {
         if (this._currentDeferred == null)
             return;
-        
+
         this._deferreds.remove(this._currentDeferred);
         this._currentDeferred = this._deferreds[0] || null;
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
