@@ -188,6 +188,10 @@ export function serialize<Class extends Serializable, T>(
     target: SerializableClassGetter<Class, T>,
     context: ClassGetterDecoratorContext<Class, T>
 ): void;
+export function serialize<Class extends Serializable>(
+    target: SerializableClass<Class>,
+    context: ClassDecoratorContext<SerializableClass<Class>>
+): void;
 export function serialize<Class extends Serializable, T, K extends string>(
     key: K extends "" ? never : K
 ): UniversalSerializeDecorator<Class, T>;
@@ -326,14 +330,14 @@ class Utilities
             given(target, "target")
                 .ensure(t => t.prototype instanceof Serializable, `class '${context.name}' decorated with serialize must extend Serializable`);
 
-            const prefix = key!;
+            const prefix = key;
 
-            given(prefix, "prefix").ensureHasValue().ensureIsString();
+            given(prefix, "prefix").ensureIsString();
 
             const info: SerializableClassInfo = {
                 className: target.getTypeName(),
                 prefix,
-                typeName: `${prefix}.${context.name}`
+                typeName: prefix == null ? context.name! : `${prefix}.${context.name}`
             };
 
             const serializeKey = this._fetchSerializableClassKey(context.name!);
