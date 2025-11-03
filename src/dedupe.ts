@@ -8,11 +8,11 @@ import { DecoratorReplacementMethod, DecoratorTargetMethod, MethodDecoratorConte
 /**
  * Creates a dedupe decorator that ensures a method is only called once within a specified time window.
  * Subsequent calls within the window are ignored. Useful for preventing duplicate operations.
- * 
+ *
  * @param window - The time window during which duplicate calls are ignored
  * @returns A method decorator that implements dedupe behavior
  * @throws ArgumentException if window is not a positive Duration
- * 
+ *
  * @example
  * ```typescript
  * class Example {
@@ -88,15 +88,15 @@ function createReplacementMethod<
     // setting value to false on initialization.
     context.addInitializer(function (this)
     {
-        (<any>this)[activeKey] = false;
+        (this as any)[activeKey] = false;
     });
 
     return async function (this: This, ...args: Args): Promise<void>
     {
-        if ((<any>this)[activeKey])
+        if ((this as any)[activeKey])
             return;
 
-        (<any>this)[activeKey] = true;
+        (this as any)[activeKey] = true;
 
         try
         {
@@ -107,7 +107,7 @@ function createReplacementMethod<
             if (delay != null)
                 await Delay.milliseconds(delay.toMilliSeconds());
 
-            (<any>this)[activeKey] = false;
+            (this as any)[activeKey] = false;
         }
     };
 }

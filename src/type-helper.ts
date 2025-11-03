@@ -4,15 +4,15 @@ import { ApplicationException } from "@nivinjoseph/n-exception";
 /**
  * Utility class for type conversion and validation in TypeScript.
  * Provides methods for safe parsing of values to common types and helper methods for working with enums.
- * 
+ *
  * @example
  * ```typescript
  * // Parse boolean values
  * const bool = TypeHelper.parseBoolean("true"); // true
- * 
+ *
  * // Parse number values
  * const num = TypeHelper.parseNumber("42"); // 42
- * 
+ *
  * // Work with enums
  * enum Status { Active = "ACTIVE" }
  * const tuples = TypeHelper.enumTypeToTuples(Status);
@@ -29,10 +29,10 @@ export class TypeHelper
 
     /**
      * Parses a value to a boolean.
-     * 
+     *
      * @param value - The value to parse
      * @returns The parsed boolean value or null if parsing fails
-     * 
+     *
      * @example
      * ```typescript
      * TypeHelper.parseBoolean("true"); // true
@@ -48,7 +48,7 @@ export class TypeHelper
         if (typeof value === "boolean")
             return value;
 
-        const strval = (<object>value).toString().trim().toLowerCase();
+        const strval = (value as object).toString().trim().toLowerCase();
 
         if (strval === "true")
             return true;
@@ -61,10 +61,10 @@ export class TypeHelper
 
     /**
      * Parses a value to a number.
-     * 
+     *
      * @param value - The value to parse
      * @returns The parsed number value or null if parsing fails
-     * 
+     *
      * @example
      * ```typescript
      * TypeHelper.parseNumber("42"); // 42
@@ -80,7 +80,7 @@ export class TypeHelper
         if (typeof value === "number")
             return Number.isFinite(value) ? value : null;
 
-        const strval = (<object>value).toString().trim();
+        const strval = (value as object).toString().trim();
 
         if (strval.length === 0)
             return null;
@@ -94,10 +94,10 @@ export class TypeHelper
 
     /**
      * Converts an enum type to an array of tuples containing key-value pairs.
-     * 
+     *
      * @param enumClass - The enum class to convert
      * @returns An array of tuples where each tuple contains [key, value] pairs
-     * 
+     *
      * @example
      * ```typescript
      * enum Status { Active = "ACTIVE", Inactive = "INACTIVE" }
@@ -114,15 +114,15 @@ export class TypeHelper
 
     /**
      * Enforces type safety in switch statements by throwing an exception for unhandled cases.
-     * 
+     *
      * @param _value - The value that should be of type 'never'
      * @param message - Optional error message
      * @throws {ApplicationException} Always throws an exception
-     * 
+     *
      * @example
      * ```typescript
      * type Status = "active" | "inactive";
-     * 
+     *
      * function handleStatus(status: Status): void {
      *     switch (status) {
      *         case "active":
@@ -150,9 +150,9 @@ export class TypeHelper
             return [];
 
         if (this._isNumber(keys[0]))
-            return keys.filter(t => this._isNumber(t)).map(t => [(<any>enumType)[t] as string, +t]);
+            return keys.filter(t => this._isNumber(t)).map(t => [(enumType as any)[t] as string, +t]);
 
-        return keys.map(t => [t, (<any>enumType)[t] as string]);
+        return keys.map(t => [t, (enumType as any)[t] as string]);
     }
 
     private static _isNumber(value: unknown): boolean
@@ -160,10 +160,10 @@ export class TypeHelper
         if (value == null)
             return false;
 
-        const val = (<object>value).toString().trim();
+        const val = (value as object).toString().trim();
         if (val.length === 0)
             return false;
-        const parsed = +(<object>value).toString().trim();
+        const parsed = +(value as object).toString().trim();
         return !isNaN(parsed) && isFinite(parsed);
     }
 }

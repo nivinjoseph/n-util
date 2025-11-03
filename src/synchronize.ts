@@ -8,11 +8,11 @@ import { ApplicationException } from "@nivinjoseph/n-exception";
 /**
  * Creates a synchronize decorator that ensures only one instance of a method runs at a time.
  * Uses a mutex to prevent concurrent execution of the decorated method.
- * 
+ *
  * @param delay - Optional delay between executions after the mutex is released
  * @returns A method decorator that implements synchronization behavior
  * @throws ArgumentException if delay is not a positive Duration
- * 
+ *
  * @example
  * ```typescript
  * class Example {
@@ -84,18 +84,17 @@ function createReplacementMethod<
 
     context.addInitializer(function (this)
     {
-        (<any>this)[mutexKey] = new Mutex();
+        (this as any)[mutexKey] = new Mutex();
     });
 
     return async function (this: This, ...args: Args): Promise<any>
     {
-        const mutex: Mutex = (<any>this)[mutexKey];
+        const mutex: Mutex = (this as any)[mutexKey];
 
         await mutex.lock();
         try
         {
             const result = await target.call(this, ...args);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }
         finally

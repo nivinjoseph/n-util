@@ -22,13 +22,13 @@ await describe("Templator", async () =>
         assert.deepStrictEqual(templator.tokens, ["firstName", "lastName", "address.street", "address.city", "address.street"]);
 
         const output = templator.render(data);
-        assert.strictEqual(output, `Hello Mr. ${data.firstName} ${data.lastName}. Address: ${data.address.street} ${(<any>data.address).city || ""} ${data.address.street}`);
+        assert.strictEqual(output, `Hello Mr. ${data.firstName} ${data.lastName}. Address: ${data.address.street} ${(data.address as any).city || ""} ${data.address.street}`);
     });
 
     await test("html escape test", () =>
     {
         const template = "{{data.title}}";
-        const descriptionData: Object = {};
+        const descriptionData = {};
         descriptionData.setValue("data.title", "CME engine optimization: Take the user's age into consideration");
 
         const templator = new Templator(template);
