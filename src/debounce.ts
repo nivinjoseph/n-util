@@ -8,11 +8,11 @@ import { DecoratorReplacementMethod, DecoratorTargetMethod, MethodDecoratorConte
 /**
  * Creates a debounce decorator that ensures a method is only called after a specified delay
  * has passed since the last call. Useful for handling rapid-fire events like search input.
- * 
+ *
  * @param delay - The duration to wait after the last call before executing
  * @returns A method decorator that implements debounce behavior
  * @throws ArgumentException if delay is not a positive Duration
- * 
+ *
  * @example
  * ```typescript
  * class Example {
@@ -86,29 +86,29 @@ function createReplacementMethod<
 
     return async function (this: This, ...args: Args)
     {
-        (<any>this)[scheduledCallKey] = async (): Promise<void> =>
+        (this as any)[scheduledCallKey] = async (): Promise<void> =>
         {
             await target.call(this, ...args);
         };
 
-        if ((<any>this)[activeKey])
+        if ((this as any)[activeKey])
             return;
 
-        while ((<any>this)[scheduledCallKey] != null && !(<any>this)[activeKey])
+        while ((this as any)[scheduledCallKey] != null && !(this as any)[activeKey])
         {
-            (<any>this)[activeKey] = true;
+            (this as any)[activeKey] = true;
             if (delay != null)
                 await Delay.milliseconds(delay.toMilliSeconds());
 
-            const currentCall: () => Promise<void> = (<any>this)[scheduledCallKey];
-            (<any>this)[scheduledCallKey] = null;
+            const currentCall: () => Promise<void> = (this as any)[scheduledCallKey];
+            (this as any)[scheduledCallKey] = null;
             try
             {
                 await currentCall();
             }
             finally
             {
-                (<any>this)[activeKey] = false;
+                (this as any)[activeKey] = false;
             }
         }
     };

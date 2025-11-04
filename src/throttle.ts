@@ -8,11 +8,11 @@ import { DecoratorReplacementMethod, DecoratorTargetMethod, MethodDecoratorConte
 /**
  * Creates a throttle decorator that limits how often a method can be called.
  * Ensures a minimum time between executions, dropping calls that occur too frequently.
- * 
+ *
  * @param delay - The minimum time that must pass between executions
  * @returns A method decorator that implements throttling behavior
  * @throws ArgumentException if delay is not a positive Duration
- * 
+ *
  * @example
  * ```typescript
  * class Example {
@@ -87,25 +87,25 @@ function createReplacementMethod<
 
     context.addInitializer(function (this)
     {
-        (<any>this)[activeKey] = false;
-        (<any>this)[scheduledCallKey] = null;
+        (this as any)[activeKey] = false;
+        (this as any)[scheduledCallKey] = null;
     });
 
     return async function (this: This, ...args: Args): Promise<void>
     {
-        (<any>this)[scheduledCallKey] = async (): Promise<void> =>
+        (this as any)[scheduledCallKey] = async (): Promise<void> =>
         {
             await target.call(this, ...args);
         };
 
-        if ((<any>this)[activeKey])
+        if ((this as any)[activeKey])
             return;
 
-        while ((<any>this)[scheduledCallKey] != null && !(<any>this)[activeKey])
+        while ((this as any)[scheduledCallKey] != null && !(this as any)[activeKey])
         {
-            (<any>this)[activeKey] = true;
-            const currentCall: () => Promise<void> = (<any>this)[scheduledCallKey];
-            (<any>this)[scheduledCallKey] = null;
+            (this as any)[activeKey] = true;
+            const currentCall: () => Promise<void> = (this as any)[scheduledCallKey];
+            (this as any)[scheduledCallKey] = null;
             try
             {
                 await currentCall();
@@ -115,7 +115,7 @@ function createReplacementMethod<
                 if (delay != null)
                     await Delay.milliseconds(delay.toMilliSeconds());
 
-                (<any>this)[activeKey] = false;
+                (this as any)[activeKey] = false;
             }
         }
     };

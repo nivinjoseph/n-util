@@ -5,11 +5,11 @@ import { ClassDefinition } from "./utility-types.js";
 //@ts-expect-error polyfill to use metadata object
 Symbol.metadata ??= Symbol("Symbol.metadata");
 
-export abstract class Serializable<TData extends object = {}>
+export abstract class Serializable<TData extends object = Record<string, any>>
 {
     public constructor(data: TData)
     {
-        given(data, "data").ensureHasValue().ensureIsObject();
+        given(data as object, "data").ensureHasValue().ensureIsObject();
     }
 
 
@@ -106,11 +106,11 @@ export class Deserializer
     {
         given(serialized, "serialized").ensureHasValue().ensureIsObject()
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            .ensure(t => (<any>t).$typename && typeof (<any>t).$typename === "string"
+            .ensure(t => (t as any).$typename && typeof (t as any).$typename === "string"
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                && !(<any>t).$typename.isEmptyOrWhiteSpace(), "$typename property is missing on object");
+                && !(t as any).$typename.isEmptyOrWhiteSpace(), "$typename property is missing on object");
 
-        const typeName = (<any>serialized).$typename;
+        const typeName = (serialized as any).$typename;
         let type = Deserializer._getType(typeName) as any;
         if (type == null)
             throw new ApplicationException(`Cannot deserialize unregistered type '${typeName}'.`);
@@ -201,7 +201,7 @@ export function serialize<
 >(
     keyOrTarget: string | SerializableClass<Class> | SerializableClassGetter<Class, T>,
     context?: ClassDecoratorContext<SerializableClass<Class>> | ClassGetterDecoratorContext<Class, T>
-): SerializeGetterDecorator<Class, T> | SerializeClassDecorator<Class> | void // eslint-disable-line @typescript-eslint/no-invalid-void-type
+): SerializeGetterDecorator<Class, T> | SerializeClassDecorator<Class> | void
 {
     if (typeof keyOrTarget === "string")
     {
@@ -226,7 +226,7 @@ export function serialize<
 
 class Utilities
 {
-    public static fetchSerializableFieldsForObject(val: Object): ReadonlyArray<SerializableFieldInfo>
+    public static fetchSerializableFieldsForObject(val: object): ReadonlyArray<SerializableFieldInfo>
     {
         const meta = val.constructor[Symbol.metadata];
         if (meta == null)
@@ -251,7 +251,7 @@ class Utilities
         return fields;
     }
 
-    public static fetchSerializableClassInfoForObject(val: Object): SerializableClassInfo
+    public static fetchSerializableClassInfoForObject(val: object): SerializableClassInfo
     {
         const meta = val.constructor[Symbol.metadata];
         if (meta == null)
@@ -303,7 +303,7 @@ class Utilities
 
             const fieldInfo: SerializableFieldInfo = {
                 name: context.name.toString(),
-                target,
+                target: target as SerializableClassGetter<Class, T>,
                 key
             };
 
@@ -380,7 +380,7 @@ export type SerializeGetterDecorator<Class extends Serializable, T> = (
 
 interface SerializableFieldInfo
 {
-    target: Function;
+    target(this: any): any;
     name: string;
     key?: string;
 }

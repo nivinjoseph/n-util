@@ -9,7 +9,7 @@ await describe("BackgroundProcessor tests", async () =>
     {
         const bp = new BackgroundProcessor((e) =>
         {
-            if ((<any>e) === 4)
+            if ((e as any) === 4)
                 throw new Error("4 is bad");
             console.log(e, "default error handler");
             return Promise.resolve();
@@ -21,13 +21,12 @@ await describe("BackgroundProcessor tests", async () =>
             bp.processAction(() =>
             {
                 if ((t % 2) === 0)
-                    // eslint-disable-next-line @typescript-eslint/no-throw-literal
                     throw t;
                 console.log(t);
                 return Promise.resolve();
             }, t > 5 ? async (e): Promise<void> =>
             {
-                if ((<any>e) === 8)
+                if ((e as any) === 8)
                     throw new Error("8 is also bad");
                 console.log(e, "custom error handler");
             } : undefined);

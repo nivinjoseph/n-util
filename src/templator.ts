@@ -4,12 +4,12 @@ import { given } from "@nivinjoseph/n-defensive";
 /**
  * A class for rendering Mustache templates with custom escaping behavior.
  * Provides functionality for template parsing, token extraction, and rendering with data objects.
- * 
+ *
  * @example
  * ```typescript
  * const template = "Hello, {{name}}!";
  * const templator = new Templator(template);
- * 
+ *
  * const data = { name: "World" };
  * console.log(templator.render(data)); // "Hello, World!"
  * ```
@@ -34,10 +34,10 @@ export class Templator
 
     /**
      * Creates a new Templator instance with the given template string.
-     * 
+     *
      * @param template - The Mustache template string
      * @throws Error if the template is not a valid string
-     * 
+     *
      * @example
      * ```typescript
      * const template = "Hello, {{name}}!";
@@ -56,21 +56,21 @@ export class Templator
 
     /**
      * Renders the template with the provided data.
-     * 
+     *
      * @param data - An object containing values for the template tokens
      * @returns The rendered template string
      * @throws Error if the data is not a valid object
-     * 
+     *
      * @example
      * ```typescript
      * const template = "Hello, {{name}}!";
      * const templator = new Templator(template);
-     * 
+     *
      * const data = { name: "World" };
      * console.log(templator.render(data)); // "Hello, World!"
      * ```
      */
-    public render(data: Object): string
+    public render(data: object): string
     {
         given(data, "data").ensureHasValue().ensureIsObject();
 

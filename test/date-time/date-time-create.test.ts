@@ -17,7 +17,7 @@ await describe("DateTime Create", async () =>
         }
 
         await test(`Given a valid value and zone
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -26,7 +26,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value as empty string and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -35,7 +35,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-01 10:60" with an invalid minute and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -44,7 +44,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-01 10:0" with an invalid minute format and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -53,7 +53,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-01 24:00" with an invalid hour(24) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -62,7 +62,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-01 1:00" with an invalid hour format and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -71,7 +71,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-00 10:00" with an invalid day(0) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -80,7 +80,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-01-32 10:00" with an invalid day(32) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -89,7 +89,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2023-02-29 10:00" with an invalid day(february 29 on non-leap year) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -98,7 +98,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-02-30 10:00" with an invalid day(february 30 on leap year)and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -107,7 +107,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-02-29 10:00" with an valid day(february 29 on leap year) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -116,7 +116,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-04-31 10:00" with an invalid day(April 31) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -125,7 +125,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-04-1 10:00" with an invalid day format and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -134,7 +134,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-00-01 10:00" with an invalid month(0) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -143,7 +143,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-13-01 10:00" with an invalid month(13) and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -152,7 +152,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "2024-1-01 10:00" with an invalid month format and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -161,7 +161,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "24-01-01 10:00" with an invalid year format and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -170,7 +170,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given value "10000-01-01 10:00" with year greater than 9999 and a valid zone
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -179,7 +179,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as an empty string
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -188,7 +188,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as an invalid random string
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -197,7 +197,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as local
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -206,7 +206,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid IANA zone America/Los_Angeles
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -215,7 +215,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as invalid IANA zone America/LosAngeles (misspelled)
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -224,7 +224,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as UTC
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -233,7 +233,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset +5:30
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -242,7 +242,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset -3
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -251,7 +251,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset +14:00
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -260,7 +260,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset -12:00
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -269,7 +269,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset +00:01
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -278,7 +278,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as valid UTC offset -00:01
-        when the constructor is called 
+        when the constructor is called
         then it should return a DateTime object`,
             () =>
             {
@@ -287,7 +287,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as invalid UTC offset +14:01
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -296,7 +296,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as invalid UTC offset -12:01
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -305,7 +305,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as invalid UTC offset +15
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -314,7 +314,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given valid value and zone as invalid UTC offset -13
-        when the constructor is called 
+        when the constructor is called
         then it should throw a validation error`,
             () =>
             {
@@ -370,7 +370,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given zone as utc
-        when DateTime for now is created 
+        when DateTime for now is created
         then zone property should be utc`,
             () =>
             {
@@ -379,7 +379,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given zone as UTC+5:30
-        when DateTime for now is created 
+        when DateTime for now is created
         then zone property should be UTC+5:30`,
             () =>
             {
@@ -388,7 +388,7 @@ await describe("DateTime Create", async () =>
         );
 
         await test(`Given zone as America/Los_Angeles
-        when DateTime for now is created 
+        when DateTime for now is created
         then zone property should be America/Los_Angeles`,
             () =>
             {
@@ -401,8 +401,8 @@ await describe("DateTime Create", async () =>
 
     await describe("From Timestamp", async () =>
     {
-        const timeStamp = 1704103200;// "2024-01-01 10:00" 
-        const maxTimestamp = 253402300799;// "9999-12-31 23:59:59" 
+        const timeStamp = 1704103200;// "2024-01-01 10:00"
+        const maxTimestamp = 253402300799;// "9999-12-31 23:59:59"
         const minTimestamp = -62167219200;// "0000-01-01 00:00:00"
 
         await test(`Given a valid timestamp and zone
@@ -410,7 +410,7 @@ await describe("DateTime Create", async () =>
         then there should not be any issues`,
             () =>
             {
-                assert.doesNotThrow(() => DateTime.createFromTimestamp(timeStamp, "utc"),);
+                assert.doesNotThrow(() => DateTime.createFromTimestamp(timeStamp, "utc"));
             }
         );
 
@@ -526,7 +526,7 @@ await describe("DateTime Create", async () =>
         then there should not be any issues`,
             () =>
             {
-                assert.doesNotThrow(() => DateTime.createFromMilliSecondsSinceEpoch(milliSeconds, "utc"),);
+                assert.doesNotThrow(() => DateTime.createFromMilliSecondsSinceEpoch(milliSeconds, "utc"));
             }
         );
 
@@ -780,7 +780,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid month 0 20240001 
+        await test(`Given a valid time code(1000) and zone, and date code with invalid month 0 20240001
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -789,7 +789,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid month 13 20241301 
+        await test(`Given a valid time code(1000) and zone, and date code with invalid month 13 20241301
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -798,7 +798,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid year >9999 100000101 
+        await test(`Given a valid time code(1000) and zone, and date code with invalid year >9999 100000101
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -1017,7 +1017,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 0 2024-00-01 
+        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 0 2024-00-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1026,7 +1026,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 13 2024-13-01 
+        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 13 2024-13-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1035,7 +1035,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid year >9999 10000-01-01 
+        await test(`Given a valid time value(10:00) and zone, and date value with invalid year >9999 10000-01-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
