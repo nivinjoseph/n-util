@@ -1,1 +1,1 @@
-{"version":3,"file":"time.d.ts","sourceRoot":"","sources":["../src/time.ts"],"names":[],"mappings":"AAEA;;GAEG;AACH,qBAAa,IAAI;IAEb,OAAO;WAGO,MAAM,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO;WAO7B,QAAQ,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO;CAMhD"}
+{"version":3,"file":"time.d.ts","sourceRoot":"","sources":["../src/time.ts"],"names":[],"mappings":"AAEA;;;;;;;;;;;;;;GAcG;AACH,qBAAa,IAAI;IAEb;;;OAGG;IACH,OAAO;IAGP;;;;;;;;;;;;OAYG;WACW,MAAM,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO;IAO3C;;;;;;;;;;;;OAYG;WACW,QAAQ,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO;CAMhD"}

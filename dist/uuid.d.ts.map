@@ -1,1 +1,1 @@
-{"version":3,"file":"uuid.d.ts","sourceRoot":"","sources":["../src/uuid.ts"],"names":[],"mappings":"AAIA,qBAAa,IAAI;IAEb,OAAO;WAGO,MAAM,IAAI,MAAM;CAIjC"}
+{"version":3,"file":"uuid.d.ts","sourceRoot":"","sources":["../src/uuid.ts"],"names":[],"mappings":"AAGA;;;;;;;;;GASG;AACH,qBAAa,IAAI;IAEb;;;OAGG;IACH,OAAO;IAGP;;;;;;;;;;OAUG;WACW,MAAM,IAAI,MAAM;CAIjC"}

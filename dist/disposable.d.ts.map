@@ -1,1 +1,1 @@
-{"version":3,"file":"disposable.d.ts","sourceRoot":"","sources":["../src/disposable.ts"],"names":[],"mappings":"AACA,MAAM,WAAW,UAAU;IAEvB,OAAO,IAAI,OAAO,CAAC,IAAI,CAAC,CAAC;CAC5B"}
+{"version":3,"file":"disposable.d.ts","sourceRoot":"","sources":["../src/disposable.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AACH,MAAM,WAAW,UAAU;IAEvB;;;;OAIG;IACH,OAAO,IAAI,OAAO,CAAC,IAAI,CAAC,CAAC;CAC5B"}

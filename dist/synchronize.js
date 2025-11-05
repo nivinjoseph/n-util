@@ -30,7 +30,6 @@ function createReplacementMethod(target, context, delay) {
         await mutex.lock();
         try {
             const result = await target.call(this, ...args);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }
         finally {

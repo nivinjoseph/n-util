@@ -186,7 +186,7 @@ class Utilities {
                 .ensure(t => !t.static, "property should not be static");
             const fieldInfo = {
                 name: context.name.toString(),
-                target,
+                target: target,
                 key
             };
             const fieldsKey = this._fetchSerializableFieldsKey();
@@ -205,11 +205,11 @@ class Utilities {
             given(target, "target")
                 .ensure(t => t.prototype instanceof Serializable, `class '${context.name}' decorated with serialize must extend Serializable`);
             const prefix = key;
-            given(prefix, "prefix").ensureHasValue().ensureIsString();
+            given(prefix, "prefix").ensureIsString();
             const info = {
                 className: target.getTypeName(),
                 prefix,
-                typeName: `${prefix}.${context.name}`
+                typeName: prefix == null ? context.name : `${prefix}.${context.name}`
             };
             const serializeKey = this._fetchSerializableClassKey(context.name);
             context.metadata[serializeKey] = info;
