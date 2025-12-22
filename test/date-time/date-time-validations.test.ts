@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, test } from "node:test";
-import { DateTime } from "../../src/index.js";
+import { DateTime, DateTimeFormat } from "../../src/index.js";
 
 
 await describe("DateTime Format Validations", async () =>
@@ -12,7 +12,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return true`,
             () =>
             {
-                assert.ok(DateTime.validateDateTimeFormat("2024-01-01 10:00"));
+                assert.ok(DateTime.validateDateTimeFormat("2024-01-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -21,7 +21,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat(""));
+                assert.ok(!DateTime.validateDateTimeFormat("", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -30,7 +30,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 10:60"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 10:60", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -39,7 +39,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 10:0"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 10:0", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -48,7 +48,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 25:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 25:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -57,7 +57,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 1:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-01 1:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -66,7 +66,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-00 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-00 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -75,7 +75,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-32 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-32 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -84,7 +84,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2023-02-29 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2023-02-29 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -93,7 +93,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-02-30 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-02-30 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -102,7 +102,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return true`,
             () =>
             {
-                assert.ok(DateTime.validateDateTimeFormat("2024-02-29 10:00"));
+                assert.ok(DateTime.validateDateTimeFormat("2024-02-29 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -111,7 +111,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-04-31 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-04-31 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -120,7 +120,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-01-1 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-01-1 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -129,7 +129,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-00-01 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-00-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -138,7 +138,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-13-01 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-13-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -147,7 +147,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("2024-1-01 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("2024-1-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -156,7 +156,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("24-01-01 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("24-01-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
 
@@ -165,7 +165,7 @@ await describe("DateTime Format Validations", async () =>
         then it should return false`,
             () =>
             {
-                assert.ok(!DateTime.validateDateTimeFormat("10000-01-01 10:00"));
+                assert.ok(!DateTime.validateDateTimeFormat("10000-01-01 10:00", DateTimeFormat.yearMonthDayHourMinute));
             }
         );
     }

@@ -63,7 +63,7 @@ await describe("DateTime Properties", async () =>
         then time code should be 1000`,
             () =>
             {
-                assert.strictEqual(new DateTime({ value: "2024-01-01 10:00", zone: "utc" }).timeCode, "1000");
+                assert.strictEqual(new DateTime({ value: "2024-01-01 10:00", zone: "utc" }).timeCode, "100000");
             }
         );
     });
@@ -95,7 +95,7 @@ await describe("DateTime Properties", async () =>
 
     await describe("Time value", async () =>
     {
-        const value = "2024-01-01 10:00";
+        const value = "2024-01-01 10:00:00";
         const dateTime = new DateTime({ value, zone: "utc" });
         const timeValue = value.split(" ").takeLast();
 
@@ -113,7 +113,7 @@ await describe("DateTime Properties", async () =>
         then the time value property should be in valid time format`,
             () =>
             {
-                assert.ok(dateTime.timeValue.matchesFormat("##:##"));
+                assert.ok(dateTime.timeValue.matchesFormat("##:##:##"));
             }
         );
     });

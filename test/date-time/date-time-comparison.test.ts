@@ -2,7 +2,7 @@ import { given } from "@nivinjoseph/n-defensive";
 import { ArgumentException } from "@nivinjoseph/n-exception";
 import assert from "node:assert";
 import { describe, test } from "node:test";
-import { DateTime, Duration } from "../../src/index.js";
+import { DateTime, Duration, DateTimeFormat_DEFAULT } from "../../src/index.js";
 
 
 await describe("DateTime Comparison", async () =>
@@ -13,8 +13,8 @@ await describe("DateTime Comparison", async () =>
     {
         // Compare different minutes in same zone
         await compareFunction(
-            "2024-01-01 10:00",
-            "2024-01-01 10:01",
+            "2024-01-01 10:00:00",
+            "2024-01-01 10:01:00",
             "1 minute",
             Duration.fromMinutes(1),
             0
@@ -22,8 +22,8 @@ await describe("DateTime Comparison", async () =>
 
         // Compare different hours in same zone
         await compareFunction(
-            "2024-01-01 10:00",
-            "2024-01-01 11:00",
+            "2024-01-01 10:00:00",
+            "2024-01-01 11:00:00",
             "1 hour",
             Duration.fromHours(1),
             0
@@ -31,8 +31,8 @@ await describe("DateTime Comparison", async () =>
 
         // Compare different days in same zone
         await compareFunction(
-            "2024-01-01 10:00",
-            "2024-01-02 10:00",
+            "2024-01-01 10:00:00",
+            "2024-01-02 10:00:00",
             "1 day",
             Duration.fromDays(1),
             1
@@ -40,8 +40,8 @@ await describe("DateTime Comparison", async () =>
 
         // Compare different months in same zone
         await compareFunction(
-            "2024-01-01 10:00",
-            "2024-02-01 10:00",
+            "2024-01-01 10:00:00",
+            "2024-02-01 10:00:00",
             "1 month",
             Duration.fromDays(31),
             31
@@ -49,8 +49,8 @@ await describe("DateTime Comparison", async () =>
 
         // Compare different years in same zone
         await compareFunction(
-            "2023-01-01 10:00",
-            "2024-01-01 10:00",
+            "2023-01-01 10:00:00",
+            "2024-01-01 10:00:00",
             "1 year",
             Duration.fromDays(365),
             365
@@ -58,8 +58,8 @@ await describe("DateTime Comparison", async () =>
 
         // Compare different years (leap year) in same zone
         await compareFunction(
-            "2024-01-01 10:00",
-            "2025-01-01 10:00",
+            "2024-01-01 10:00:00",
+            "2025-01-01 10:00:00",
             "1 year",
             Duration.fromDays(366),
             366
@@ -72,7 +72,7 @@ await describe("DateTime Comparison", async () =>
     {
         // Compare same value but different zones utc and IST (UTC+5:30)
         await compareFunction(
-            "2024-01-01 10:00",
+            "2024-01-01 10:00:00",
             "utc",
             "UTC+5:30",
             "5 hour 30 minute",
@@ -83,7 +83,7 @@ await describe("DateTime Comparison", async () =>
         // Compare same value but different zones America/Los_Angeles and utc
         // could be 7 or 8 based on Daylight savings
         await compareFunction(
-            "2024-01-01 10:00",
+            "2024-01-01 10:00:00",
             "America/Los_Angeles",
             "utc",
             `8 hours`,
@@ -94,7 +94,7 @@ await describe("DateTime Comparison", async () =>
         // Compare same value but different zones America/Los_Angeles and IST(UTC+5:30)
         // could be 12.5 or 13.5 based on Daylight savings
         await compareFunction(
-            "2024-01-01 10:00",
+            "2024-01-01 10:00:00",
             "America/Los_Angeles",
             "UTC+5:30",
             `13 hours 30 minutes`,
@@ -103,7 +103,7 @@ await describe("DateTime Comparison", async () =>
         );
 
         await compareFunction(
-            "2024-06-01 10:00",
+            "2024-06-01 10:00:00",
             "America/Los_Angeles",
             "UTC+5:30",
             `12 hours 30 minutes`,
@@ -115,7 +115,7 @@ await describe("DateTime Comparison", async () =>
 
     async function testSameTimestampDifferentValueAndZone(compareFunction: (dateTime1: DateTime, dateTime2: DateTime) => Promise<void>): Promise<void>
     {
-        const utcDateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+        const utcDateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
         // Compare different value and zones utc and IST but represent same time
         await compareFunction(
@@ -143,7 +143,7 @@ await describe("DateTime Comparison", async () =>
         then it should return the min DateTime object`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.strictEqual(DateTime.min(dateTime, dateTime), dateTime); // return second arg when same
             }
         );
@@ -153,8 +153,8 @@ await describe("DateTime Comparison", async () =>
         then it should return the second dateTime that's passed in`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(DateTime.min(dateTime1, dateTime2), dateTime2); // return second arg when same
                 assert.strictEqual(DateTime.min(dateTime2, dateTime1), dateTime1); // return second arg when same
@@ -164,9 +164,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -188,7 +188,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -241,7 +241,7 @@ await describe("DateTime Comparison", async () =>
         then it should return the max DateTime object`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.strictEqual(DateTime.max(dateTime, dateTime), dateTime); // return second arg when same
             }
         );
@@ -251,8 +251,8 @@ await describe("DateTime Comparison", async () =>
         then it should return the second dateTime that's passed in`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(DateTime.max(dateTime1, dateTime2), dateTime2); // return second arg when same
                 assert.strictEqual(DateTime.max(dateTime2, dateTime1), dateTime1); // return second arg when same
@@ -263,9 +263,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -287,7 +287,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -340,7 +340,7 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(dateTime.isSame(dateTime));
             }
         );
@@ -350,8 +350,8 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime1.isSame(dateTime2));
                 assert.ok(dateTime2.isSame(dateTime1));
@@ -361,9 +361,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -385,7 +385,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -438,7 +438,7 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(dateTime.isSameDay(dateTime));
             }
         );
@@ -448,8 +448,8 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime1.isSameDay(dateTime2));
                 assert.ok(dateTime2.isSameDay(dateTime1));
@@ -460,9 +460,9 @@ await describe("DateTime Comparison", async () =>
             _: Duration, daysDiff: number): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
             given(daysDiff, "daysDiff").ensureHasValue().ensureIsNumber().ensure(t => t >= 0);
 
@@ -486,7 +486,7 @@ await describe("DateTime Comparison", async () =>
             _: Duration, daysDiff: number): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -540,7 +540,7 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(dateTime.equals(dateTime));
             }
         );
@@ -550,8 +550,8 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime1.equals(dateTime2));
                 assert.ok(dateTime2.equals(dateTime1));
@@ -561,9 +561,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -585,7 +585,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -638,7 +638,7 @@ await describe("DateTime Comparison", async () =>
         then it should return false`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(!dateTime.isBefore(dateTime));
             }
         );
@@ -648,8 +648,8 @@ await describe("DateTime Comparison", async () =>
         then it should return false`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(!dateTime1.isBefore(dateTime2));
                 assert.ok(!dateTime2.isBefore(dateTime1));
@@ -659,9 +659,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -691,7 +691,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -752,7 +752,7 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(dateTime.isSameOrBefore(dateTime));
             }
         );
@@ -762,8 +762,8 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime1.isSameOrBefore(dateTime2));
                 assert.ok(dateTime2.isSameOrBefore(dateTime1));
@@ -773,9 +773,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -805,7 +805,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -866,7 +866,7 @@ await describe("DateTime Comparison", async () =>
         then it should return false`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(!dateTime.isAfter(dateTime));
             }
         );
@@ -876,8 +876,8 @@ await describe("DateTime Comparison", async () =>
         then it should return false`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(!dateTime1.isAfter(dateTime2));
                 assert.ok(!dateTime2.isAfter(dateTime1));
@@ -887,9 +887,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -919,7 +919,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -980,7 +980,7 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
                 assert.ok(dateTime.isSameOrAfter(dateTime));
             }
         );
@@ -990,8 +990,8 @@ await describe("DateTime Comparison", async () =>
         then it should return true`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime1.isSameOrAfter(dateTime2));
                 assert.ok(dateTime2.isSameOrAfter(dateTime1));
@@ -1001,9 +1001,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
 
             const min = new DateTime({ value: minValue, zone: "utc" });
@@ -1034,7 +1034,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -1095,7 +1095,7 @@ await describe("DateTime Comparison", async () =>
         then it should return Duration of 0 milliseconds`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(dateTime.timeDiff(dateTime).toMilliSeconds(), 0);
             }
@@ -1106,8 +1106,8 @@ await describe("DateTime Comparison", async () =>
         then it should return Duration of 0 milliseconds`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(dateTime1.timeDiff(dateTime2).toMilliSeconds(), 0);
                 assert.strictEqual(dateTime2.timeDiff(dateTime1).toMilliSeconds(), 0);
@@ -1117,9 +1117,9 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentValues(minValue: string, maxValue: string, diff: string, timeDiff: Duration): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
             given(timeDiff, "timeDiff").ensureHasValue().ensureIsInstanceOf(Duration);
 
@@ -1142,7 +1142,7 @@ await describe("DateTime Comparison", async () =>
         async function compareDateTimeWithDifferentZones(value: string, behindZone: string, aheadZone: string, diff: string, timeDiff: Duration): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -1196,7 +1196,7 @@ await describe("DateTime Comparison", async () =>
         then it should return 0`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(dateTime.daysDiff(dateTime), 0);
             }
@@ -1207,8 +1207,8 @@ await describe("DateTime Comparison", async () =>
         then it should return 0`,
             () =>
             {
-                const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+                const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.strictEqual(dateTime1.daysDiff(dateTime2), 0);
                 assert.strictEqual(dateTime2.daysDiff(dateTime1), 0);
@@ -1219,9 +1219,9 @@ await describe("DateTime Comparison", async () =>
             _: Duration, daysDiff: number): Promise<void>
         {
             given(minValue, "minValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(maxValue, "maxValue").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(diff, "diff").ensureHasValue().ensureIsString();
             given(daysDiff, "daysDiff").ensureHasValue().ensureIsNumber().ensure(t => t >= 0);
 
@@ -1245,7 +1245,7 @@ await describe("DateTime Comparison", async () =>
             _: Duration, daysDiff: number): Promise<void>
         {
             given(value, "value").ensureHasValue().ensureIsString()
-                .ensure(t => DateTime.validateDateTimeFormat(t));
+                .ensure(t => DateTime.validateDateTimeFormat(t, DateTimeFormat_DEFAULT));
             given(behindZone, "behindZone").ensureHasValue().ensureIsString()
                 .ensure(t => DateTime.validateTimeZone(t));
             given(aheadZone, "aheadZone").ensureHasValue().ensureIsString()
@@ -1344,7 +1344,7 @@ await describe("DateTime Comparison", async () =>
         when it's checked it's between the same DateTime
         then it should return true`, () =>
         {
-            const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+            const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
             assert.ok(dateTime.isBetween(dateTime, dateTime));
         });
@@ -1353,9 +1353,9 @@ await describe("DateTime Comparison", async () =>
         when it's compared isBetween
         then it should return true`, () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
             assert.ok(dateTime1.isBetween(dateTime2, dateTime3));
             assert.ok(dateTime2.isBetween(dateTime1, dateTime3));
@@ -1364,9 +1364,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different minutes", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 10:01", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 10:02", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 10:01:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 10:02:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1380,9 +1380,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different hours", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 11:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 12:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 11:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 12:00:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1396,9 +1396,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different days", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-02 10:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-03 10:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-02 10:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-03 10:00:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1412,9 +1412,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different months", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-02-01 10:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-03-01 10:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-02-01 10:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-03-01 10:00:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1428,9 +1428,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different years", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2023-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2025-01-01 10:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2023-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2025-01-01 10:00:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1444,9 +1444,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different zones", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "UTC+5:30" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 10:00", zone: "America/Los_Angeles" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "UTC+5:30" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 10:00:00", zone: "America/Los_Angeles" });
 
             await checkIsFalse(dateTime1, dateTime2, dateTime3);
             await checkIsInvalidParams(dateTime1, dateTime3, dateTime2);
@@ -1510,14 +1510,14 @@ await describe("DateTime Comparison", async () =>
             then it should return true`,
             () =>
             {
-                const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+                const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
                 assert.ok(dateTime.isWithinTimeRange(dateTime.timeCode, dateTime.timeCode));
             });
 
         await describe("Compare to Invalid start time code", async () =>
         {
-            const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+            const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
             await checkIsInvalidParams(dateTime, "", "1000", "start time code is invalid");
             await checkIsInvalidParams(dateTime, "11", "1000", "start time code is invalid");
@@ -1528,7 +1528,7 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare to Invalid end time code", async () =>
         {
-            const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
+            const dateTime = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
 
             await checkIsInvalidParams(dateTime, "1000", "", "end time code is invalid");
             await checkIsInvalidParams(dateTime, "1000", "11", "end time code is invalid");
@@ -1539,9 +1539,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different minutes", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 10:01", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 10:02", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 10:01:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 10:02:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2.timeCode, dateTime3.timeCode);
             await checkIsInvalidParams(dateTime1, dateTime3.timeCode, dateTime2.timeCode,
@@ -1558,9 +1558,9 @@ await describe("DateTime Comparison", async () =>
 
         await describe("Compare different hours", async () =>
         {
-            const dateTime1 = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-            const dateTime2 = new DateTime({ value: "2024-01-01 11:00", zone: "utc" });
-            const dateTime3 = new DateTime({ value: "2024-01-01 12:00", zone: "utc" });
+            const dateTime1 = new DateTime({ value: "2024-01-01 10:00:00", zone: "utc" });
+            const dateTime2 = new DateTime({ value: "2024-01-01 11:00:00", zone: "utc" });
+            const dateTime3 = new DateTime({ value: "2024-01-01 12:00:00", zone: "utc" });
 
             await checkIsFalse(dateTime1, dateTime2.timeCode, dateTime3.timeCode);
             await checkIsInvalidParams(dateTime1, dateTime3.timeCode, dateTime2.timeCode,

@@ -87,7 +87,7 @@ await describe("DateTime Utility", async () =>
 
     await describe("to string", async () =>
     {
-        const value = "2024-01-01 10:00";
+        const value = "2024-01-01 10:00:00";
 
         await test(`Given a valid value (${value}) and zone (utc)
         when a DateTime is created from that value and zone
@@ -125,7 +125,7 @@ await describe("DateTime Utility", async () =>
 
     await describe("to string date time", async () =>
     {
-        const value = "2024-01-01 10:00";
+        const value = "2024-01-01 10:00:00";
 
         await test(`Given a valid value (${value}) and zone (utc)
         when a DateTime is created from that value and zone
@@ -136,7 +136,7 @@ await describe("DateTime Utility", async () =>
             }
         );
 
-        const value1 = "2024-02-29 18:30";
+        const value1 = "2024-02-29 18:30:00";
         await test(`Given a valid value (${value1}) and zone (utc)
         when a DateTime is created from that value and zone
         then toStringDateTime() on that dateTime should return the passed in value`,
@@ -146,7 +146,7 @@ await describe("DateTime Utility", async () =>
             }
         );
 
-        const value2 = "1986-08-17 15:57";
+        const value2 = "1986-08-17 15:57:00";
         await test(`Given a valid value (${value2}) and zone (utc)
         when a DateTime is created from that value and zone
         then toStringDateTime() on that dateTime should return the passed in value`,
@@ -269,7 +269,7 @@ await describe("DateTime Utility", async () =>
                 then first element of the array should represent first day of month`,
                     () =>
                     {
-                        assert.strictEqual(daysOfMonth.takeFirst().value, "2024-01-01 00:00");
+                        assert.strictEqual(daysOfMonth.takeFirst().value, "2024-01-01 00:00:00");
                         assert.strictEqual(daysOfMonth.takeFirst().dateValue, "2024-01-01");
                     }
                 );
@@ -279,7 +279,7 @@ await describe("DateTime Utility", async () =>
                 then last element of the array should represent last day of month`,
                     () =>
                     {
-                        assert.strictEqual(daysOfMonth.takeLast().value, "2024-01-31 23:59");
+                        assert.strictEqual(daysOfMonth.takeLast().value, "2024-01-31 23:59:59");
                         assert.strictEqual(daysOfMonth.takeLast().dateValue, "2024-01-31");
                     }
                 );
@@ -303,7 +303,7 @@ await describe("DateTime Utility", async () =>
             then first element of the array should represent first day of month`,
                 () =>
                 {
-                    assert.strictEqual(daysOfMonth.takeFirst().value, "2024-02-01 00:00");
+                    assert.strictEqual(daysOfMonth.takeFirst().value, "2024-02-01 00:00:00");
                     assert.strictEqual(daysOfMonth.takeFirst().dateValue, "2024-02-01");
                 }
             );
@@ -313,7 +313,7 @@ await describe("DateTime Utility", async () =>
             then last element of the array should represent last day of month`,
                 () =>
                 {
-                    assert.strictEqual(daysOfMonth.takeLast().value, "2024-02-29 23:59");
+                    assert.strictEqual(daysOfMonth.takeLast().value, "2024-02-29 23:59:59");
                     assert.strictEqual(daysOfMonth.takeLast().dateValue, "2024-02-29");
                 }
             );
@@ -337,7 +337,7 @@ await describe("DateTime Utility", async () =>
             then first element of the array should represent first day of month`,
                 () =>
                 {
-                    assert.strictEqual(daysOfMonth.takeFirst().value, "2023-02-01 00:00");
+                    assert.strictEqual(daysOfMonth.takeFirst().value, "2023-02-01 00:00:00");
                     assert.strictEqual(daysOfMonth.takeFirst().dateValue, "2023-02-01");
                 }
             );
@@ -347,7 +347,7 @@ await describe("DateTime Utility", async () =>
             then last element of the array should represent last day of month`,
                 () =>
                 {
-                    assert.strictEqual(daysOfMonth.takeLast().value, "2023-02-28 23:59");
+                    assert.strictEqual(daysOfMonth.takeLast().value, "2023-02-28 23:59:59");
                     assert.strictEqual(daysOfMonth.takeLast().dateValue, "2023-02-28");
                 }
             );
@@ -356,7 +356,7 @@ await describe("DateTime Utility", async () =>
 
     await describe("Convert to zone", async () =>
     {
-        const value = "2024-01-01 10:00";
+        const value = "2024-01-01 10:00:00";
 
         const dateTime = new DateTime({ value, zone: "utc" });
 
@@ -377,7 +377,7 @@ await describe("DateTime Utility", async () =>
             () =>
             {
                 assert.strictEqual(dateTime.convertToZone("utc").value, value);
-                assert.strictEqual(dateTime.convertToZone("UTC+5:30").value, "2024-01-01 15:30");
+                assert.strictEqual(dateTime.convertToZone("UTC+5:30").value, "2024-01-01 15:30:00");
             }
         );
 
@@ -387,7 +387,7 @@ await describe("DateTime Utility", async () =>
             () =>
             {
                 const dateTime = new DateTime({ value: "2024-01-01 10:00", zone: "utc" });
-                assert.strictEqual(dateTime.convertToZone("America/Los_Angeles").value, "2024-01-01 02:00");
+                assert.strictEqual(dateTime.convertToZone("America/Los_Angeles").value, "2024-01-01 02:00:00");
             }
         );
 
@@ -397,7 +397,7 @@ await describe("DateTime Utility", async () =>
             () =>
             {
                 const dateTime = new DateTime({ value: "2024-06-01 10:00", zone: "utc" });
-                assert.strictEqual(dateTime.convertToZone("America/Los_Angeles").value, "2024-06-01 03:00");
+                assert.strictEqual(dateTime.convertToZone("America/Los_Angeles").value, "2024-06-01 03:00:00");
             }
         );
 

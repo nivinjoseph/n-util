@@ -4,6 +4,7 @@ import { Serializable, serialize } from "./serializable.js";
 import { Duration } from "./duration.js";
 import { Schema } from "./utility-types.js";
 import { TypeHelper } from "./type-helper.js";
+import { DateTimeFormat, DateTimeFormat_DEFAULT } from "./date-time-format.js";
 
 /**
  * A robust date and time handling system with timezone support.
@@ -19,7 +20,7 @@ import { TypeHelper } from "./type-helper.js";
 @serialize("Nutil")
 export class DateTime extends Serializable<DateTimeSchema>
 {
-    private static readonly _format = "yyyy-MM-dd HH:mm";
+    // private static readonly _format = "yyyy-MM-dd HH:mm:ss";
 
     private readonly _value: string;
     private readonly _zone: string;
@@ -62,7 +63,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     public get dateCode(): string { return this._dateCode; }
 
     /**
-     * Gets the time code in HHMM format.
+     * Gets the time code in HHMMSS format.
      */
     public get timeCode(): string { return this._timeCode; }
 
@@ -72,7 +73,7 @@ export class DateTime extends Serializable<DateTimeSchema>
     public get dateValue(): string { return this._dateValue; }
 
     /**
-     * Gets the time value in HH:mm format.
+     * Gets the time value in HH:mm:ss format.
      */
     public get timeValue(): string { return this._timeValue; }
 
@@ -99,7 +100,46 @@ export class DateTime extends Serializable<DateTimeSchema>
         let { value, zone } = data;
 
         given(value, "value").ensureHasValue().ensureIsString();
-        value = value.trim();
+        value = value.trim()
+            .split("")
+            .take(DateTimeFormat.yearMonthDayHourMinuteSecond.length)
+            .join("");
+
+        if (value.matchesFormat("####"))
+            value = `${value}-01`; // MM
+        if (value.matchesFormat("####-##"))
+            value = `${value}-01`; // dd
+        if (value.matchesFormat("####-##-##"))
+            value = `${value} 00`; // HH
+        if (value.matchesFormat("####-##-## ##"))
+            value = `${value}:00`; // mm
+        if (value.matchesFormat("####-##-## ##:##"))
+            value = `${value}:00`; // ss
+        
+        given(value, "value")
+            .ensure(
+                t => t.matchesFormat("####-##-## ##:##:##"),
+                "Invalid format"
+        );
+        
+        const [date, time] = value.split(" ");
+
+        const dateSplit = date.split("-");
+        // const _year = Number.parseInt(dateSplit[0]);
+        const month = Number.parseInt(dateSplit[1]);
+        const day = Number.parseInt(dateSplit[2]);
+
+        given(month, "month").ensureHasValue().ensureIsNumber().ensure(t => t >= 1 && t <= 12);
+        given(day, "day").ensureHasValue().ensureIsNumber().ensure(t => t >= 1 && t <= 31);
+
+        const timeSplit = time.split(":");
+        const hour = Number.parseInt(timeSplit[0]);
+        const minute = Number.parseInt(timeSplit[1]);
+        const second = Number.parseInt(timeSplit[2]);
+
+        given(hour, "hour").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 23);
+        given(minute, "minute").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 59);
+        given(second, "second").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 59);
 
         given(zone, "zone").ensureHasValue().ensureIsString();
         zone = zone.trim();
@@ -108,19 +148,24 @@ export class DateTime extends Serializable<DateTimeSchema>
 
         DateTime._validateZone(zone);
 
-        const dateTime = LuxonDateTime.fromFormat(value, DateTime._format, { zone });
-        given(data, "data").ensure(_ => dateTime.isValid, `value and zone is invalid (${dateTime.invalidReason}: ${dateTime.invalidExplanation})`);
+        const dateTime = LuxonDateTime.fromFormat(
+            value,
+            DateTimeFormat.yearMonthDayHourMinuteSecond,
+            { zone }
+        );
+        given(data, "data")
+            .ensure(
+                _ => dateTime.isValid,
+                `value and zone is invalid (${dateTime.invalidReason}: ${dateTime.invalidExplanation})`
+            );
 
         this._value = value;
         this._zone = zone;
         this._dateTime = dateTime;
         this._timestamp = this._dateTime.toUnixInteger();
 
-        const [date, time] = this._value.split(" ");
-        given(time, "time").ensure(t => t !== "24:00", "Time should not be 24:00");
-
-        this._dateCode = date.split("-").join("");
-        this._timeCode = time.split(":").join("");
+        this._dateCode = dateSplit.join("");
+        this._timeCode = timeSplit.join("");
 
         this._dateValue = date;
         this._timeValue = time;
@@ -140,14 +185,14 @@ export class DateTime extends Serializable<DateTimeSchema>
         if (zone != null)
         {
             return new DateTime({
-                value: LuxonDateTime.now().setZone(zone).toFormat(DateTime._format),
+                value: LuxonDateTime.now().setZone(zone).toFormat(DateTimeFormat_DEFAULT),
                 zone
             });
         }
         else
         {
             return new DateTime({
-                value: LuxonDateTime.utc().toFormat(DateTime._format),
+                value: LuxonDateTime.utc().toFormat(DateTimeFormat_DEFAULT),
                 zone: "utc"
             });
         }
@@ -165,7 +210,9 @@ export class DateTime extends Serializable<DateTimeSchema>
         given(timestamp, "timestamp").ensureHasValue().ensureIsNumber();
         given(zone, "zone").ensureHasValue().ensureIsString();
 
-        const dateTimeString = LuxonDateTime.fromSeconds(timestamp).setZone(zone).toFormat(this._format);
+        const dateTimeString = LuxonDateTime.fromSeconds(timestamp)
+            .setZone(zone).toFormat(DateTimeFormat_DEFAULT);
+        
         return new DateTime({
             value: dateTimeString,
             zone
@@ -184,7 +231,8 @@ export class DateTime extends Serializable<DateTimeSchema>
         given(milliseconds, "milliseconds").ensureHasValue().ensureIsNumber();
         given(zone, "zone").ensureHasValue().ensureIsString();
 
-        const dateTimeString = LuxonDateTime.fromMillis(milliseconds).setZone(zone).toFormat(this._format);
+        const dateTimeString = LuxonDateTime.fromMillis(milliseconds)
+            .setZone(zone).toFormat(DateTimeFormat_DEFAULT);
         return new DateTime({
             value: dateTimeString,
             zone
@@ -205,7 +253,7 @@ export class DateTime extends Serializable<DateTimeSchema>
             .ensure(t => t.matchesFormat("########"));
 
         given(timeCode, "timeCode").ensureHasValue().ensureIsString()
-            .ensure(t => t.matchesFormat("####"));
+            .ensure(t => t.matchesFormat("######"));
 
         given(zone, "zone").ensureHasValue().ensureIsString();
 
@@ -217,9 +265,10 @@ export class DateTime extends Serializable<DateTimeSchema>
         const day = dateCodeSplit.skip(6).join("");
 
         const hour = timeCodeSplit.take(2).join("");
-        const minute = timeCodeSplit.skip(2).join("");
+        const minute = timeCodeSplit.skip(2).take(2).join("");
+        const second = timeCodeSplit.skip(4).join("");
 
-        const dateTimeString = `${year}-${month}-${day} ${hour}:${minute}`;
+        const dateTimeString = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 
         return new DateTime({
             value: dateTimeString,
@@ -241,7 +290,7 @@ export class DateTime extends Serializable<DateTimeSchema>
             .ensure(t => t.matchesFormat("####-##-##"));
 
         given(timeValue, "timeValue").ensureHasValue().ensureIsString()
-            .ensure(t => t.matchesFormat("##:##"));
+            .ensure(t => t.matchesFormat("##:##:##"));
 
         given(zone, "zone").ensureHasValue().ensureIsString();
 
@@ -295,13 +344,13 @@ export class DateTime extends Serializable<DateTimeSchema>
      * @param value - The string to validate.
      * @returns True if the string matches the format, false otherwise.
      */
-    public static validateDateTimeFormat(value: string): boolean
+    public static validateDateTimeFormat(value: string, format: DateTimeFormat): boolean
     {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (value == null || value.isEmptyOrWhiteSpace())
             return false;
 
-        return LuxonDateTime.fromFormat(value, DateTime._format).isValid;
+        return LuxonDateTime.fromFormat(value, format).isValid;
     }
 
     /**
@@ -612,7 +661,7 @@ export class DateTime extends Serializable<DateTimeSchema>
         given(time, "time").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Duration);
 
         return new DateTime({
-            value: this._dateTime.plus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTime._format),
+            value: this._dateTime.plus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTimeFormat_DEFAULT),
             zone: this._zone
         });
     }
@@ -628,7 +677,7 @@ export class DateTime extends Serializable<DateTimeSchema>
         given(time, "time").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Duration);
 
         return new DateTime({
-            value: this._dateTime.minus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTime._format),
+            value: this._dateTime.minus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTimeFormat_DEFAULT),
             zone: this._zone
         });
     }
@@ -646,7 +695,7 @@ export class DateTime extends Serializable<DateTimeSchema>
             .ensure(t => t >= 0 && Number.isInteger(t), "days should be positive integer");
 
         return new DateTime({
-            value: this._dateTime.plus({ days }).toFormat(DateTime._format),
+            value: this._dateTime.plus({ days }).toFormat(DateTimeFormat_DEFAULT),
             zone: this._zone
         });
     }
@@ -664,7 +713,7 @@ export class DateTime extends Serializable<DateTimeSchema>
             .ensure(t => t >= 0 && Number.isInteger(t), "days should be positive integer");
 
         return new DateTime({
-            value: this._dateTime.minus({ days }).toFormat(DateTime._format),
+            value: this._dateTime.minus({ days }).toFormat(DateTimeFormat_DEFAULT),
             zone: this._zone
         });
     }
@@ -689,7 +738,7 @@ export class DateTime extends Serializable<DateTimeSchema>
         luxonDays[luxonDays.length - 1] = endOfMonth;
 
         return luxonDays.map(t => new DateTime({
-            value: t.toFormat(DateTime._format),
+            value: t.toFormat(DateTimeFormat_DEFAULT),
             zone: this._zone
         }));
     }
@@ -709,7 +758,7 @@ export class DateTime extends Serializable<DateTimeSchema>
         if (zone === this.zone)
             return this;
 
-        const newDateTime = this._dateTime.setZone(zone).toFormat(DateTime._format);
+        const newDateTime = this._dateTime.setZone(zone).toFormat(DateTimeFormat_DEFAULT);
 
         return new DateTime({
             value: newDateTime,
@@ -728,12 +777,12 @@ export class DateTime extends Serializable<DateTimeSchema>
     public isWithinTimeRange(startTimeCode: string, endTimeCode: string): boolean
     {
         given(startTimeCode, "startTimeCode").ensureHasValue().ensureIsString()
-            .ensure(t => t.matchesFormat("####"))
-            .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 2359);
+            .ensure(t => t.matchesFormat("######"))
+            .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 235959);
 
         given(endTimeCode, "endTimeCode").ensureHasValue().ensureIsString()
-            .ensure(t => t.matchesFormat("####"))
-            .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 2359)
+            .ensure(t => t.matchesFormat("######"))
+            .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 235959)
             .ensure(t => Number.parseInt(t) >= Number.parseInt(startTimeCode),
                 "must be >= startTimeCode");
 

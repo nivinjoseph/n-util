@@ -2,14 +2,14 @@ import { ArgumentException } from "@nivinjoseph/n-exception";
 import { DateTime as LuxonDateTime } from "luxon";
 import assert from "node:assert";
 import { describe, test } from "node:test";
-import { DateTime } from "../../src/index.js";
+import { DateTime, DateTimeFormat_DEFAULT } from "../../src/index.js";
 
 
 await describe("DateTime Create", async () =>
 {
     await describe("Constructor", async () =>
     {
-        const validValue = "2024-01-01 10:00";
+        const validValue = "2024-01-01 10:00:00";
 
         function checkIsInvalid(value: string, zone = "utc"): void
         {
@@ -332,7 +332,7 @@ await describe("DateTime Create", async () =>
         then it should be same`,
             () =>
             {
-                const nativeDate = new Date().toISOString().substring(0, 16).replace("T", " ");
+                const nativeDate = new Date().toISOString().substring(0, 19).replace("T", " ");
                 // this might fail if at the end of minute and next is at start of minute. but rare condition
                 assert.strictEqual(DateTime.now().value, nativeDate);
             }
@@ -346,7 +346,7 @@ await describe("DateTime Create", async () =>
                 // using luxon in this test because native date does not support timezones well
                 // this might fail if at the end of minute and next is at start of minute. but rare condition
                 assert.strictEqual(DateTime.now("UTC+5:30").value,
-                    LuxonDateTime.now().setZone("UTC+5:30").toFormat("yyyy-MM-dd HH:mm"));
+                    LuxonDateTime.now().setZone("UTC+5:30").toFormat(DateTimeFormat_DEFAULT));
             }
         );
 
@@ -414,16 +414,16 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid timestamp for "2024-01-01 10:00"
+        await test(`Given a valid timestamp for "2024-01-01 10:00:00"
         when DateTime is created from that timestamp
-        then value should be "2024-01-01 10:00"`,
+        then value should be "2024-01-01 10:00:00"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromTimestamp(timeStamp, "utc").value, "2024-01-01 10:00");
+                assert.strictEqual(DateTime.createFromTimestamp(timeStamp, "utc").value, "2024-01-01 10:00:00");
             }
         );
 
-        await test(`Given a valid timestamp for "2024-01-01 10:00"
+        await test(`Given a valid timestamp for "2024-01-01 10:00:00"
         when DateTime is created from that timestamp
         then timestamp property should return what's passed in`,
             () =>
@@ -437,7 +437,7 @@ await describe("DateTime Create", async () =>
         the value should be epoch start`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromTimestamp(0, "utc").value, "1970-01-01 00:00");
+                assert.strictEqual(DateTime.createFromTimestamp(0, "utc").value, "1970-01-01 00:00:00");
             }
         );
 
@@ -446,25 +446,25 @@ await describe("DateTime Create", async () =>
         the value should be epoch start -1 second`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromTimestamp(-1, "utc").value, "1969-12-31 23:59");
+                assert.strictEqual(DateTime.createFromTimestamp(-1, "utc").value, "1969-12-31 23:59:59");
             }
         );
 
-        await test(`Given a valid timestamp for "9999-12-31 23:59"
+        await test(`Given a valid timestamp for "9999-12-31 23:59:59"
         when DateTime is created from that timestamp
-        then value should be "9999-12-31 23:59"`,
+        then value should be "9999-12-31 23:59:59"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromTimestamp(maxTimestamp, "utc").value, "9999-12-31 23:59");
+                assert.strictEqual(DateTime.createFromTimestamp(maxTimestamp, "utc").value, "9999-12-31 23:59:59");
             }
         );
 
-        await test(`Given a valid timestamp for "0000-01-01 00:00"
+        await test(`Given a valid timestamp for "0000-01-01 00:00:00"
         when DateTime is created from that timestamp
-        then value should be "0000-01-01 00:00"`,
+        then value should be "0000-01-01 00:00:00"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromTimestamp(minTimestamp, "utc").value, "0000-01-01 00:00");
+                assert.strictEqual(DateTime.createFromTimestamp(minTimestamp, "utc").value, "0000-01-01 00:00:00");
             }
         );
 
@@ -530,16 +530,16 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid milliSeconds for "2024-01-01 10:00"
+        await test(`Given a valid milliSeconds for "2024-01-01 10:00:00"
         when DateTime is created from that milliSeconds
-        then value should be "2024-01-01 10:00"`,
+        then value should be "2024-01-01 10:00:00"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(milliSeconds, "utc").value, "2024-01-01 10:00");
+                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(milliSeconds, "utc").value, "2024-01-01 10:00:00");
             }
         );
 
-        await test(`Given a valid milliSeconds for "2024-01-01 10:00"
+        await test(`Given a valid milliSeconds for "2024-01-01 10:00:00"
         when DateTime is created from that milliSeconds
         then valueOf() should return what's passed in`,
             () =>
@@ -553,7 +553,7 @@ await describe("DateTime Create", async () =>
         the value should be epoch start`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(0, "utc").value, "1970-01-01 00:00");
+                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(0, "utc").value, "1970-01-01 00:00:00");
             }
         );
 
@@ -562,27 +562,27 @@ await describe("DateTime Create", async () =>
         the value should be epoch start -1 second`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(-1, "utc").value, "1969-12-31 23:59");
+                assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(-1, "utc").value, "1969-12-31 23:59:59");
             }
         );
 
-        await test(`Given a valid milliSeconds for "9999-12-31 23:59"
+        await test(`Given a valid milliSeconds for "9999-12-31 23:59:59"
         when DateTime is created from that milliSeconds
-        then value should be "9999-12-31 23:59"`,
+        then value should be "9999-12-31 23:59:59"`,
             () =>
             {
                 assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(maxMilliSecondsSinceEpoch, "utc").value,
-                    "9999-12-31 23:59");
+                    "9999-12-31 23:59:59");
             }
         );
 
-        await test(`Given a valid milliSeconds for "0000-01-01 00:00"
+        await test(`Given a valid milliSeconds for "0000-01-01 00:00:00"
         when DateTime is created from that milliSeconds
-        then value should be "0000-01-01 00:00"`,
+        then value should be "0000-01-01 00:00:00"`,
             () =>
             {
                 assert.strictEqual(DateTime.createFromMilliSecondsSinceEpoch(minMilliSecondsSinceEpoch, "utc").value,
-                    "0000-01-01 00:00");
+                    "0000-01-01 00:00:00");
             }
         );
 
@@ -638,14 +638,14 @@ await describe("DateTime Create", async () =>
     await describe("From Codes", async () =>
     {
         const validDateCode = "20240101";
-        const validTimeCode = "1000";
+        const validTimeCode = "100000";
 
         function checkIsInvalid(dateCode: string, timeCode: string): void
         {
             assert.throws(() => DateTime.createFromCodes(dateCode, timeCode, "utc"), ArgumentException);
         }
 
-        await test(`Given a valid date code(20240101), time code(1000) and zone
+        await test(`Given a valid date code(20240101), time code(100000) and zone
         when DateTime is created from that codes
         then it should not throw any errors"`,
             () =>
@@ -654,16 +654,16 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid date code(20240101), time code(1000) and zone
+        await test(`Given a valid date code(20240101), time code(100000) and zone
         when DateTime is created from that codes
-        then it should have the value "2024-01-01 10:00"`,
+        then it should have the value "2024-01-01 10:00:00"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromCodes(validDateCode, validTimeCode, "utc").value, "2024-01-01 10:00");
+                assert.strictEqual(DateTime.createFromCodes(validDateCode, validTimeCode, "utc").value, "2024-01-01 10:00:00");
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code as an empty string
+        await test(`Given a valid time code(100000) and zone, and date code as an empty string
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -672,7 +672,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code is in invalid format 2024-01-01
+        await test(`Given a valid time code(100000) and zone, and date code is in invalid format 2024-01-01
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -681,7 +681,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code in invalid format 2411
+        await test(`Given a valid time code(100000) and zone, and date code in invalid format 2411
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -690,7 +690,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code in invalid format 202411
+        await test(`Given a valid time code(100000) and zone, and date code in invalid format 202411
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -699,7 +699,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code in invalid format 2024011
+        await test(`Given a valid time code(100000) and zone, and date code in invalid format 2024011
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -708,7 +708,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code in invalid format 2024101
+        await test(`Given a valid time code(100000) and zone, and date code in invalid format 2024101
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -717,7 +717,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code in invalid format 240101
+        await test(`Given a valid time code(100000) and zone, and date code in invalid format 240101
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -726,7 +726,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid day 0 20240100
+        await test(`Given a valid time code(100000) and zone, and date code with invalid day 0 20240100
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -735,7 +735,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid day 32 20240132
+        await test(`Given a valid time code(100000) and zone, and date code with invalid day 32 20240132
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -744,7 +744,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid day feb 29 on non-leap year 20230229
+        await test(`Given a valid time code(100000) and zone, and date code with invalid day feb 29 on non-leap year 20230229
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -753,7 +753,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid day feb 30 20240230
+        await test(`Given a valid time code(100000) and zone, and date code with invalid day feb 30 20240230
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -762,7 +762,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code feb 29 on leap year 20240229
+        await test(`Given a valid time code(100000) and zone, and date code feb 29 on leap year 20240229
         when DateTime is created from that codes
         then  it should return the DateTime object`,
             () =>
@@ -771,7 +771,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid day 20240431 (April 31)
+        await test(`Given a valid time code(100000) and zone, and date code with invalid day 20240431 (April 31)
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -780,7 +780,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid month 0 20240001
+        await test(`Given a valid time code(100000) and zone, and date code with invalid month 0 20240001
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -789,7 +789,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid month 13 20241301
+        await test(`Given a valid time code(100000) and zone, and date code with invalid month 13 20241301
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -798,7 +798,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time code(1000) and zone, and date code with invalid year >9999 100000101
+        await test(`Given a valid time code(100000) and zone, and date code with invalid year >9999 100000101
         when DateTime is created from that codes
         then  it should throw a validation error`,
             () =>
@@ -879,7 +879,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid date code(20240101), time code(1000) and zone as America/Los_Angeles
+        await test(`Given a valid date code(20240101), time code(100000) and zone as America/Los_Angeles
         when DateTime is created from that codes
         then zone property should be America/Los_Angeles`,
             () =>
@@ -893,23 +893,23 @@ await describe("DateTime Create", async () =>
     await describe("From values", async () =>
     {
         const validDateValue = "2024-01-01";
-        const validTimeValue = "10:00";
+        const validTimeValue = "10:00:00";
 
         function checkIsInvalid(dateValue: string, timeValue: string): void
         {
             assert.throws(() => DateTime.createFromValues(dateValue, timeValue, "utc"), ArgumentException);
         }
 
-        await test(`Given a valid date value(2024-01-01), time value(10:00) and zone
+        await test(`Given a valid date value(2024-01-01), time value(10:00:00) and zone
         when DateTime is created from that values
-        then it should have the value "2024-01-01 10:00"`,
+        then it should have the value "2024-01-01 10:00:00"`,
             () =>
             {
-                assert.strictEqual(DateTime.createFromValues(validDateValue, validTimeValue, "utc").value, "2024-01-01 10:00");
+                assert.strictEqual(DateTime.createFromValues(validDateValue, validTimeValue, "utc").value, "2024-01-01 10:00:00");
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value as an empty string
+        await test(`Given a valid time value(10:00:00) and zone, and date value as an empty string
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -918,7 +918,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value in incorrect format "2024/01/01"
+        await test(`Given a valid time value(10:00:00) and zone, and date value in incorrect format "2024/01/01"
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -927,7 +927,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value in invalid format 24-1-1
+        await test(`Given a valid time value(10:00:00) and zone, and date value in invalid format 24-1-1
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -945,7 +945,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value in invalid format 2024-01-1
+        await test(`Given a valid time value(10:00:00) and zone, and date value in invalid format 2024-01-1
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -954,7 +954,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value in invalid format 2024-1-01
+        await test(`Given a valid time value(10:00:00) and zone, and date value in invalid format 2024-1-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -963,7 +963,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value in invalid format 24-01-01
+        await test(`Given a valid time value(10:00:00) and zone, and date value in invalid format 24-01-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -972,7 +972,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid day 0 2024-01-00
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid day 0 2024-01-00
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -981,7 +981,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid day 32 2024-01-32
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid day 32 2024-01-32
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -990,7 +990,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid day feb 29 on non-leap year 2023-02-29
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid day feb 29 on non-leap year 2023-02-29
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -999,7 +999,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid day feb 30 2024-02-30
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid day feb 30 2024-02-30
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1008,7 +1008,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid day 2024-04-31 (April 31)
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid day 2024-04-31 (April 31)
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1017,7 +1017,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 0 2024-00-01
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid month 0 2024-00-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1026,7 +1026,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid month 13 2024-13-01
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid month 13 2024-13-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
@@ -1035,7 +1035,7 @@ await describe("DateTime Create", async () =>
             }
         );
 
-        await test(`Given a valid time value(10:00) and zone, and date value with invalid year >9999 10000-01-01
+        await test(`Given a valid time value(10:00:00) and zone, and date value with invalid year >9999 10000-01-01
         when DateTime is created from that values
         then  it should throw a validation error`,
             () =>
