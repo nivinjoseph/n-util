@@ -1,6 +1,7 @@
 import { Serializable } from "./serializable.js";
 import { Duration } from "./duration.js";
 import { Schema } from "./utility-types.js";
+import { DateTimeFormat } from "./date-time-format.js";
 /**
  * A robust date and time handling system with timezone support.
  * This class provides comprehensive functionality for date/time manipulation, comparison, and formatting.
@@ -13,7 +14,6 @@ import { Schema } from "./utility-types.js";
  * ```
  */
 export declare class DateTime extends Serializable<DateTimeSchema> {
-    private static readonly _format;
     private readonly _value;
     private readonly _zone;
     private readonly _dateTime;
@@ -45,7 +45,7 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
      */
     get dateCode(): string;
     /**
-     * Gets the time code in HHMM format.
+     * Gets the time code in HHMMSS format.
      */
     get timeCode(): string;
     /**
@@ -53,7 +53,7 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
      */
     get dateValue(): string;
     /**
-     * Gets the time value in HH:mm format.
+     * Gets the time value in HH:mm:ss format.
      */
     get timeValue(): string;
     /**
@@ -134,7 +134,7 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
      * @param value - The string to validate.
      * @returns True if the string matches the format, false otherwise.
      */
-    static validateDateTimeFormat(value: string): boolean;
+    static validateDateTimeFormat(value: string, format: DateTimeFormat): boolean;
     /**
      * Validates if a string matches the date format "yyyy-MM-dd".
      *

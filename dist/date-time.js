@@ -4,6 +4,7 @@ import { DateTime as LuxonDateTime, Interval as LuxonInterval } from "luxon";
 import { Serializable, serialize } from "./serializable.js";
 import { Duration } from "./duration.js";
 import { TypeHelper } from "./type-helper.js";
+import { DateTimeFormat, DateTimeFormat_DEFAULT } from "./date-time-format.js";
 /**
  * A robust date and time handling system with timezone support.
  * This class provides comprehensive functionality for date/time manipulation, comparison, and formatting.
@@ -35,8 +36,9 @@ let DateTime = (() => {
             __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
             DateTime = _classThis = _classDescriptor.value;
             if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+            __runInitializers(_classThis, _classExtraInitializers);
         }
-        static _format = "yyyy-MM-dd HH:mm";
+        // private static readonly _format = "yyyy-MM-dd HH:mm:ss";
         _value = __runInitializers(this, _instanceExtraInitializers);
         _zone;
         _dateTime;
@@ -68,7 +70,7 @@ let DateTime = (() => {
          */
         get dateCode() { return this._dateCode; }
         /**
-         * Gets the time code in HHMM format.
+         * Gets the time code in HHMMSS format.
          */
         get timeCode() { return this._timeCode; }
         /**
@@ -76,7 +78,7 @@ let DateTime = (() => {
          */
         get dateValue() { return this._dateValue; }
         /**
-         * Gets the time value in HH:mm format.
+         * Gets the time value in HH:mm:ss format.
          */
         get timeValue() { return this._timeValue; }
         /**
@@ -97,22 +99,50 @@ let DateTime = (() => {
             super(data);
             let { value, zone } = data;
             given(value, "value").ensureHasValue().ensureIsString();
-            value = value.trim();
+            value = value.trim()
+                .split("")
+                .take(DateTimeFormat.yearMonthDayHourMinuteSecond.length)
+                .join("");
+            if (value.matchesFormat("####"))
+                value = `${value}-01`; // MM
+            if (value.matchesFormat("####-##"))
+                value = `${value}-01`; // dd
+            if (value.matchesFormat("####-##-##"))
+                value = `${value} 00`; // HH
+            if (value.matchesFormat("####-##-## ##"))
+                value = `${value}:00`; // mm
+            if (value.matchesFormat("####-##-## ##:##"))
+                value = `${value}:00`; // ss
+            given(value, "value")
+                .ensure(t => t.matchesFormat("####-##-## ##:##:##"), "Invalid format");
+            const [date, time] = value.split(" ");
+            const dateSplit = date.split("-");
+            // const _year = Number.parseInt(dateSplit[0]);
+            const month = Number.parseInt(dateSplit[1]);
+            const day = Number.parseInt(dateSplit[2]);
+            given(month, "month").ensureHasValue().ensureIsNumber().ensure(t => t >= 1 && t <= 12);
+            given(day, "day").ensureHasValue().ensureIsNumber().ensure(t => t >= 1 && t <= 31);
+            const timeSplit = time.split(":");
+            const hour = Number.parseInt(timeSplit[0]);
+            const minute = Number.parseInt(timeSplit[1]);
+            const second = Number.parseInt(timeSplit[2]);
+            given(hour, "hour").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 23);
+            given(minute, "minute").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 59);
+            given(second, "second").ensureHasValue().ensureIsNumber().ensure(t => t >= 0 && t <= 59);
             given(zone, "zone").ensureHasValue().ensureIsString();
             zone = zone.trim();
             if (zone.toLowerCase() === "utc")
                 zone = zone.toLowerCase();
             DateTime._validateZone(zone);
-            const dateTime = LuxonDateTime.fromFormat(value, DateTime._format, { zone });
-            given(data, "data").ensure(_ => dateTime.isValid, `value and zone is invalid (${dateTime.invalidReason}: ${dateTime.invalidExplanation})`);
+            const dateTime = LuxonDateTime.fromFormat(value, DateTimeFormat.yearMonthDayHourMinuteSecond, { zone });
+            given(data, "data")
+                .ensure(_ => dateTime.isValid, `value and zone is invalid (${dateTime.invalidReason}: ${dateTime.invalidExplanation})`);
             this._value = value;
             this._zone = zone;
             this._dateTime = dateTime;
             this._timestamp = this._dateTime.toUnixInteger();
-            const [date, time] = this._value.split(" ");
-            given(time, "time").ensure(t => t !== "24:00", "Time should not be 24:00");
-            this._dateCode = date.split("-").join("");
-            this._timeCode = time.split(":").join("");
+            this._dateCode = dateSplit.join("");
+            this._timeCode = timeSplit.join("");
             this._dateValue = date;
             this._timeValue = time;
         }
@@ -126,13 +156,13 @@ let DateTime = (() => {
             given(zone, "zone").ensureIsString();
             if (zone != null) {
                 return new DateTime({
-                    value: LuxonDateTime.now().setZone(zone).toFormat(DateTime._format),
+                    value: LuxonDateTime.now().setZone(zone).toFormat(DateTimeFormat_DEFAULT),
                     zone
                 });
             }
             else {
                 return new DateTime({
-                    value: LuxonDateTime.utc().toFormat(DateTime._format),
+                    value: LuxonDateTime.utc().toFormat(DateTimeFormat_DEFAULT),
                     zone: "utc"
                 });
             }
@@ -147,7 +177,8 @@ let DateTime = (() => {
         static createFromTimestamp(timestamp, zone) {
             given(timestamp, "timestamp").ensureHasValue().ensureIsNumber();
             given(zone, "zone").ensureHasValue().ensureIsString();
-            const dateTimeString = LuxonDateTime.fromSeconds(timestamp).setZone(zone).toFormat(this._format);
+            const dateTimeString = LuxonDateTime.fromSeconds(timestamp)
+                .setZone(zone).toFormat(DateTimeFormat_DEFAULT);
             return new DateTime({
                 value: dateTimeString,
                 zone
@@ -163,7 +194,8 @@ let DateTime = (() => {
         static createFromMilliSecondsSinceEpoch(milliseconds, zone) {
             given(milliseconds, "milliseconds").ensureHasValue().ensureIsNumber();
             given(zone, "zone").ensureHasValue().ensureIsString();
-            const dateTimeString = LuxonDateTime.fromMillis(milliseconds).setZone(zone).toFormat(this._format);
+            const dateTimeString = LuxonDateTime.fromMillis(milliseconds)
+                .setZone(zone).toFormat(DateTimeFormat_DEFAULT);
             return new DateTime({
                 value: dateTimeString,
                 zone
@@ -181,7 +213,7 @@ let DateTime = (() => {
             given(dateCode, "dateCode").ensureHasValue().ensureIsString()
                 .ensure(t => t.matchesFormat("########"));
             given(timeCode, "timeCode").ensureHasValue().ensureIsString()
-                .ensure(t => t.matchesFormat("####"));
+                .ensure(t => t.matchesFormat("######"));
             given(zone, "zone").ensureHasValue().ensureIsString();
             const dateCodeSplit = dateCode.split("");
             const timeCodeSplit = timeCode.split("");
@@ -189,8 +221,9 @@ let DateTime = (() => {
             const month = dateCodeSplit.skip(4).take(2).join("");
             const day = dateCodeSplit.skip(6).join("");
             const hour = timeCodeSplit.take(2).join("");
-            const minute = timeCodeSplit.skip(2).join("");
-            const dateTimeString = `${year}-${month}-${day} ${hour}:${minute}`;
+            const minute = timeCodeSplit.skip(2).take(2).join("");
+            const second = timeCodeSplit.skip(4).join("");
+            const dateTimeString = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
             return new DateTime({
                 value: dateTimeString,
                 zone
@@ -208,7 +241,7 @@ let DateTime = (() => {
             given(dateValue, "dateValue").ensureHasValue().ensureIsString()
                 .ensure(t => t.matchesFormat("####-##-##"));
             given(timeValue, "timeValue").ensureHasValue().ensureIsString()
-                .ensure(t => t.matchesFormat("##:##"));
+                .ensure(t => t.matchesFormat("##:##:##"));
             given(zone, "zone").ensureHasValue().ensureIsString();
             const dateTimeString = `${dateValue} ${timeValue}`;
             return new DateTime({
@@ -250,11 +283,11 @@ let DateTime = (() => {
          * @param value - The string to validate.
          * @returns True if the string matches the format, false otherwise.
          */
-        static validateDateTimeFormat(value) {
+        static validateDateTimeFormat(value, format) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (value == null || value.isEmptyOrWhiteSpace())
                 return false;
-            return LuxonDateTime.fromFormat(value, DateTime._format).isValid;
+            return LuxonDateTime.fromFormat(value, format).isValid;
         }
         /**
          * Validates if a string matches the date format "yyyy-MM-dd".
@@ -484,7 +517,7 @@ let DateTime = (() => {
         addTime(time) {
             given(time, "time").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Duration);
             return new DateTime({
-                value: this._dateTime.plus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTime._format),
+                value: this._dateTime.plus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTimeFormat_DEFAULT),
                 zone: this._zone
             });
         }
@@ -497,7 +530,7 @@ let DateTime = (() => {
         subtractTime(time) {
             given(time, "time").ensureHasValue().ensureIsObject().ensureIsInstanceOf(Duration);
             return new DateTime({
-                value: this._dateTime.minus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTime._format),
+                value: this._dateTime.minus({ milliseconds: time.toMilliSeconds() }).toFormat(DateTimeFormat_DEFAULT),
                 zone: this._zone
             });
         }
@@ -512,7 +545,7 @@ let DateTime = (() => {
             given(days, "days").ensureHasValue().ensureIsNumber()
                 .ensure(t => t >= 0 && Number.isInteger(t), "days should be positive integer");
             return new DateTime({
-                value: this._dateTime.plus({ days }).toFormat(DateTime._format),
+                value: this._dateTime.plus({ days }).toFormat(DateTimeFormat_DEFAULT),
                 zone: this._zone
             });
         }
@@ -527,7 +560,7 @@ let DateTime = (() => {
             given(days, "days").ensureHasValue().ensureIsNumber()
                 .ensure(t => t >= 0 && Number.isInteger(t), "days should be positive integer");
             return new DateTime({
-                value: this._dateTime.minus({ days }).toFormat(DateTime._format),
+                value: this._dateTime.minus({ days }).toFormat(DateTimeFormat_DEFAULT),
                 zone: this._zone
             });
         }
@@ -547,7 +580,7 @@ let DateTime = (() => {
             luxonDays[0] = startOfMonth;
             luxonDays[luxonDays.length - 1] = endOfMonth;
             return luxonDays.map(t => new DateTime({
-                value: t.toFormat(DateTime._format),
+                value: t.toFormat(DateTimeFormat_DEFAULT),
                 zone: this._zone
             }));
         }
@@ -563,7 +596,7 @@ let DateTime = (() => {
                 .ensure(t => DateTime.validateTimeZone(t));
             if (zone === this.zone)
                 return this;
-            const newDateTime = this._dateTime.setZone(zone).toFormat(DateTime._format);
+            const newDateTime = this._dateTime.setZone(zone).toFormat(DateTimeFormat_DEFAULT);
             return new DateTime({
                 value: newDateTime,
                 zone
@@ -579,18 +612,15 @@ let DateTime = (() => {
          */
         isWithinTimeRange(startTimeCode, endTimeCode) {
             given(startTimeCode, "startTimeCode").ensureHasValue().ensureIsString()
-                .ensure(t => t.matchesFormat("####"))
-                .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 2359);
+                .ensure(t => t.matchesFormat("######"))
+                .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 235959);
             given(endTimeCode, "endTimeCode").ensureHasValue().ensureIsString()
-                .ensure(t => t.matchesFormat("####"))
-                .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 2359)
+                .ensure(t => t.matchesFormat("######"))
+                .ensure(t => Number.parseInt(t) >= 0 && Number.parseInt(t) <= 235959)
                 .ensure(t => Number.parseInt(t) >= Number.parseInt(startTimeCode), "must be >= startTimeCode");
             const startDateTime = DateTime.createFromCodes(this.dateCode, startTimeCode, this.zone);
             const endDateTime = DateTime.createFromCodes(this.dateCode, endTimeCode, this.zone);
             return this.isBetween(startDateTime, endDateTime);
-        }
-        static {
-            __runInitializers(_classThis, _classExtraInitializers);
         }
     };
     return DateTime = _classThis;

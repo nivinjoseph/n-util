@@ -25,4 +25,6 @@ export { synchronize, SynchronizeMethodDecorator, SynchronizeDecoratorContext, S
 export { throttle, ThrottleMethodDecorator } from "./throttle.js";
 export { DecoratorTargetMethod, DecoratorReplacementMethod, MethodDecoratorContext } from "./decorator-helpers.js";
 export { DateTime, DateTimeSchema } from "./date-time.js";
+export { DateTimeFormat, DateTimeFormat_DEFAULT } from "./date-time-format.js";
+export { DateTimeSpan, DateTimeSpanSchema } from "./date-time-span.js";
 //# sourceMappingURL=index.d.ts.map
