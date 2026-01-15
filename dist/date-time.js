@@ -36,9 +36,9 @@ let DateTime = (() => {
             __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
             DateTime = _classThis = _classDescriptor.value;
             if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
-            __runInitializers(_classThis, _classExtraInitializers);
         }
-        // private static readonly _format = "yyyy-MM-dd HH:mm:ss";
+        static _fixedNow = null;
+        static _relativeNow = null;
         _value = __runInitializers(this, _instanceExtraInitializers);
         _zone;
         _dateTime;
@@ -147,6 +147,40 @@ let DateTime = (() => {
             this._timeValue = time;
         }
         /**
+         * Sets a fixed timestamp for testing purposes. All calls to DateTime.now() will return this fixed time.
+         *
+         * @param timestamp - The Unix timestamp in seconds to use as the fixed "now" time.
+         * @throws Error if timestamp is not a valid number.
+         */
+        static useFixedNow(timestamp) {
+            given(timestamp, "timestamp").ensureHasValue().ensureIsNumber();
+            DateTime._fixedNow = timestamp;
+            DateTime._relativeNow = null;
+        }
+        /**
+         * Sets a relative timestamp for testing purposes. DateTime.now() will return times relative to this base timestamp,
+         * advancing as real time advances.
+         *
+         * @param timestamp - The Unix timestamp in seconds to use as the base "now" time.
+         * @throws Error if timestamp is not a valid number.
+         */
+        static useRelativeNow(timestamp) {
+            given(timestamp, "timestamp").ensureHasValue().ensureIsNumber();
+            DateTime._relativeNow = {
+                baseTimestamp: timestamp,
+                baseRealTime: Date.now()
+            };
+            DateTime._fixedNow = null;
+        }
+        /**
+         * Resets any fixed or relative "now" time set by useFixedNow or useRelativeNow.
+         * DateTime.now() will return the actual current time after calling this method.
+         */
+        static resetFixedOrRelativeNow() {
+            DateTime._fixedNow = null;
+            DateTime._relativeNow = null;
+        }
+        /**
          * Creates a DateTime instance for the current time.
          *
          * @param zone - The timezone identifier. If not specified, UTC is used.
@@ -154,6 +188,21 @@ let DateTime = (() => {
          */
         static now(zone) {
             given(zone, "zone").ensureIsString();
+            // Check if we're using fixed or relative now for testing
+            let timestamp = null;
+            if (DateTime._fixedNow !== null) {
+                timestamp = DateTime._fixedNow;
+            }
+            else if (DateTime._relativeNow !== null) {
+                const elapsedMs = Date.now() - DateTime._relativeNow.baseRealTime;
+                timestamp = DateTime._relativeNow.baseTimestamp + Math.floor(elapsedMs / 1000);
+            }
+            // If we have a timestamp, use it
+            if (timestamp !== null) {
+                const targetZone = zone ?? "utc";
+                return DateTime.createFromTimestamp(timestamp, targetZone);
+            }
+            // Otherwise, use real current time
             if (zone != null) {
                 return new DateTime({
                     value: LuxonDateTime.now().setZone(zone).toFormat(DateTimeFormat_DEFAULT),
@@ -392,7 +441,7 @@ let DateTime = (() => {
         /**
          * Returns the string representation of this DateTime.
          *
-         * @returns The string representation in the format "YYYY-MM-DD HH:mm zone".
+         * @returns The string representation in the format "YYYY-MM-DD HH:mm:ss zone".
          */
         toString() {
             return `${this._value} ${this._zone}`;
@@ -400,7 +449,7 @@ let DateTime = (() => {
         /**
          * Returns the date and time string.
          *
-         * @returns The string in the format "YYYY-MM-DD HH:mm".
+         * @returns The string in the format "YYYY-MM-DD HH:mm:ss".
          */
         toStringDateTime() {
             return this._value;
@@ -412,6 +461,80 @@ let DateTime = (() => {
          */
         toStringISO() {
             return this._dateTime.toISO({ format: "extended", includeOffset: true });
+        }
+        /**
+         * Formats a DateTime object to a string using the specified format
+         * @param dateTime The DateTime object to format
+         * @param format The format to use (defaults to yearMonthDayHourMinute: "yyyy-MM-dd HH:mm")
+         * @returns The formatted datetime string
+         */
+        format(format = DateTimeFormat.yearMonthDayHourMinuteSecond) {
+            // For the default format, use the built-in toStringDateTime()
+            if (format === DateTimeFormat.yearMonthDayHourMinuteSecond)
+                return this.toStringDateTime();
+            // For other formats, parse and reformat
+            const value = this.toStringDateTime();
+            // Parse the value (format: "yyyy-MM-dd HH:mm:ss")
+            const [date, time] = value.split(" ");
+            const [year, month, day] = date.split("-");
+            const [hour, minute, _second] = time.split(":");
+            switch (format) {
+                case DateTimeFormat.yearMonthDayHourMinute:
+                    return `${year}-${month}-${day} ${hour}:${minute}`;
+                case DateTimeFormat.yearMonthDayHour:
+                    return `${year}-${month}-${day} ${hour}`;
+                case DateTimeFormat.yearMonthDay:
+                    return `${year}-${month}-${day}`;
+                case DateTimeFormat.yearMonth:
+                    return `${year}-${month}`;
+                case DateTimeFormat.year:
+                    return year;
+                default:
+                    return value;
+            }
+        }
+        /**
+         * Formats a DateTime object to a string using extended format capabilities.
+         * This method leverages Luxon's full formatting capabilities for more complex formatting needs.
+         *
+         * @param format - The format string to use. Can be a predefined DateTimeFormatExt or any custom Luxon format string.
+         * @returns The formatted datetime string.
+         *
+         * @example
+         * ```typescript
+         * const dt = DateTime.now("America/New_York");
+         * dt.formatExt("DD HH:mm:ss"); // "Jul 2, 2023 15:30:20"
+         * dt.formatExt("MMMM d, yyyy"); // "July 2, 2023"
+         * dt.formatExt("EEEE DD"); // "Friday Jul 2, 2023"
+         *
+         * export type DateTimeFormatExt =
+            "DD HH:mm:ss" // Jul 2, 2023 15:30:20
+            | "MMMM d, HH:mm:ss"  // Jul 2 15:30:20
+            | "DD HH:mm" // Jul 2, 2023 15:30
+            | "MMMM d, HH:mm"  // Jul 2 15:30
+            | "yyyy/LL/dd" // 2023/07/21
+            | "yyyy/LL/dd HH:mm:ss"
+            | "yyyy/LL/dd HH:mm"
+            | "yyyy-MM-dd" // 2023-07-21
+            | "HH:mm:ss" // 15:30:20
+            | "HH:mm" // 15:30
+            | "DDD" // July 21, 2023
+            | "DD" // Jul 21, 2023
+            | "yyyy-MM" // 2023-07
+            | "MMMM yyyy" // July 2023
+            | "DDDD" // Sunday, July 9, 2023
+            | "EEEE DD" // Friday Aug 4, 2023
+            | "LLL yyyy" // Jul 2025
+            | "LLLL yyyy" // July 2025
+            | "MMMM d" // November 2
+            | "LLL d" // Nov 2
+            ;
+         *
+         * ```
+         */
+        formatExt(format) {
+            given(format, "format").ensureHasValue().ensureIsString();
+            return this._dateTime.toFormat(format);
         }
         /**
          * Checks if this DateTime represents the same instant as another.
@@ -621,6 +744,9 @@ let DateTime = (() => {
             const startDateTime = DateTime.createFromCodes(this.dateCode, startTimeCode, this.zone);
             const endDateTime = DateTime.createFromCodes(this.dateCode, endTimeCode, this.zone);
             return this.isBetween(startDateTime, endDateTime);
+        }
+        static {
+            __runInitializers(_classThis, _classExtraInitializers);
         }
     };
     return DateTime = _classThis;

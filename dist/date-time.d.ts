@@ -1,7 +1,7 @@
 import { Serializable } from "./serializable.js";
 import { Duration } from "./duration.js";
 import { Schema } from "./utility-types.js";
-import { DateTimeFormat } from "./date-time-format.js";
+import { DateTimeFormat, DateTimeFormatExt } from "./date-time-format.js";
 /**
  * A robust date and time handling system with timezone support.
  * This class provides comprehensive functionality for date/time manipulation, comparison, and formatting.
@@ -14,6 +14,8 @@ import { DateTimeFormat } from "./date-time-format.js";
  * ```
  */
 export declare class DateTime extends Serializable<DateTimeSchema> {
+    private static _fixedNow;
+    private static _relativeNow;
     private readonly _value;
     private readonly _zone;
     private readonly _dateTime;
@@ -71,6 +73,26 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
      * @throws Error if the value or zone is invalid.
      */
     constructor(data: DateTimeSchema);
+    /**
+     * Sets a fixed timestamp for testing purposes. All calls to DateTime.now() will return this fixed time.
+     *
+     * @param timestamp - The Unix timestamp in seconds to use as the fixed "now" time.
+     * @throws Error if timestamp is not a valid number.
+     */
+    static useFixedNow(timestamp: number): void;
+    /**
+     * Sets a relative timestamp for testing purposes. DateTime.now() will return times relative to this base timestamp,
+     * advancing as real time advances.
+     *
+     * @param timestamp - The Unix timestamp in seconds to use as the base "now" time.
+     * @throws Error if timestamp is not a valid number.
+     */
+    static useRelativeNow(timestamp: number): void;
+    /**
+     * Resets any fixed or relative "now" time set by useFixedNow or useRelativeNow.
+     * DateTime.now() will return the actual current time after calling this method.
+     */
+    static resetFixedOrRelativeNow(): void;
     /**
      * Creates a DateTime instance for the current time.
      *
@@ -180,13 +202,13 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
     /**
      * Returns the string representation of this DateTime.
      *
-     * @returns The string representation in the format "YYYY-MM-DD HH:mm zone".
+     * @returns The string representation in the format "YYYY-MM-DD HH:mm:ss zone".
      */
     toString(): string;
     /**
      * Returns the date and time string.
      *
-     * @returns The string in the format "YYYY-MM-DD HH:mm".
+     * @returns The string in the format "YYYY-MM-DD HH:mm:ss".
      */
     toStringDateTime(): string;
     /**
@@ -195,6 +217,53 @@ export declare class DateTime extends Serializable<DateTimeSchema> {
      * @returns The ISO 8601 string representation.
      */
     toStringISO(): string;
+    /**
+     * Formats a DateTime object to a string using the specified format
+     * @param dateTime The DateTime object to format
+     * @param format The format to use (defaults to yearMonthDayHourMinute: "yyyy-MM-dd HH:mm")
+     * @returns The formatted datetime string
+     */
+    format(format?: DateTimeFormat): string;
+    /**
+     * Formats a DateTime object to a string using extended format capabilities.
+     * This method leverages Luxon's full formatting capabilities for more complex formatting needs.
+     *
+     * @param format - The format string to use. Can be a predefined DateTimeFormatExt or any custom Luxon format string.
+     * @returns The formatted datetime string.
+     *
+     * @example
+     * ```typescript
+     * const dt = DateTime.now("America/New_York");
+     * dt.formatExt("DD HH:mm:ss"); // "Jul 2, 2023 15:30:20"
+     * dt.formatExt("MMMM d, yyyy"); // "July 2, 2023"
+     * dt.formatExt("EEEE DD"); // "Friday Jul 2, 2023"
+     *
+     * export type DateTimeFormatExt =
+        "DD HH:mm:ss" // Jul 2, 2023 15:30:20
+        | "MMMM d, HH:mm:ss"  // Jul 2 15:30:20
+        | "DD HH:mm" // Jul 2, 2023 15:30
+        | "MMMM d, HH:mm"  // Jul 2 15:30
+        | "yyyy/LL/dd" // 2023/07/21
+        | "yyyy/LL/dd HH:mm:ss"
+        | "yyyy/LL/dd HH:mm"
+        | "yyyy-MM-dd" // 2023-07-21
+        | "HH:mm:ss" // 15:30:20
+        | "HH:mm" // 15:30
+        | "DDD" // July 21, 2023
+        | "DD" // Jul 21, 2023
+        | "yyyy-MM" // 2023-07
+        | "MMMM yyyy" // July 2023
+        | "DDDD" // Sunday, July 9, 2023
+        | "EEEE DD" // Friday Aug 4, 2023
+        | "LLL yyyy" // Jul 2025
+        | "LLLL yyyy" // July 2025
+        | "MMMM d" // November 2
+        | "LLL d" // Nov 2
+        ;
+     *
+     * ```
+     */
+    formatExt(format: DateTimeFormatExt | string): string;
     /**
      * Checks if this DateTime represents the same instant as another.
      *
