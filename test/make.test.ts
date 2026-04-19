@@ -27,6 +27,7 @@ await describe("Make", async () =>
             const testFunc = (val: number): Promise<never> =>
             {
                 numAttempts++;
+                // eslint-disable-next-line no-useless-assignment
                 value = ++val;
                 return Promise.reject(new ApplicationException("not working"));
             };
@@ -203,6 +204,7 @@ await describe("Make", async () =>
             const testFunc = (val: number): Promise<void> =>
             {
                 numAttempts++;
+                // eslint-disable-next-line no-useless-assignment
                 value = ++val;
                 return Promise.reject(new ApplicationException("not working"));
             };
@@ -370,6 +372,7 @@ await describe("Make", async () =>
             const testFunc = (val: number): Promise<void> =>
             {
                 numAttempts++;
+                // eslint-disable-next-line no-useless-assignment
                 value = ++val;
                 return Promise.reject(new ApplicationException("not working"));
             };

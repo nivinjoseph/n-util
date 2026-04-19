@@ -237,6 +237,7 @@ await describe("DateTime Utility", async () =>
             }
         );
 
+        // FIXME: this test will behave differently depending on daylight savings time active state
         const dstUtcOffset = IANAZone.create("America/Los_Angeles").formatOffset(Date.now(), "short"); // for correct offset in DST
         await test(`Given a valid value (${value}) and zone (America/Los_Angeles)
         when a DateTime is created from that value and zone

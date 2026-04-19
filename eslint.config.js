@@ -11,7 +11,7 @@ export default defineConfig(
     tsEslint.configs.recommended,
     importPlugin.flatConfigs.recommended,
     {
-        ignores: ["dist/**", "node_modules/**", "**/*.js", "**/*.map", "**/*d.ts"]
+        ignores: ["dist/**", "node_modules/**", "**/*.js", "**/*.map", "**/*.d.ts"]
     },
     {
         files: ["**/*.ts"],
@@ -50,9 +50,9 @@ export default defineConfig(
         files: ["**/*.ts"],
         languageOptions: {
             parserOptions: {
-                project: [
-                    "./tsconfig.json"
-                ],
+                // project: [
+                //     "./tsconfig.json"
+                // ],
                 tsconfigRootDir: import.meta.dirname,
                 projectService: true
             }
