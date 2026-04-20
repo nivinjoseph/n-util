@@ -61,62 +61,67 @@ export class DtoFactory {
         given(value, "value").ensureHasValue().ensureIsObject();
         given(keys, "keys").ensureHasValue().ensureIsArray();
         const typename = value.$typename ?? value.getTypeName();
-        let dto;
-        if (value instanceof Serializable) {
-            const serialized = value.serialize();
-            dto = keys.reduce((acc, k) => {
-                if (typeof k === "object") {
-                    Object.keys(k).forEach((alias) => {
-                        const key = k[alias];
-                        if (typeof key === "function")
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            acc[alias] = key(value);
-                        else
-                            acc[alias] = serialized[key];
-                        if (acc[alias] == null)
-                            acc[alias] = null;
-                    });
-                }
-                else {
-                    acc[k] = serialized[k];
-                    if (acc[k] == null)
-                        acc[k] = null;
-                }
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const dto = keys.reduce((acc, k) => {
+            if (typeof k === "object") {
+                Object.keys(k).forEach((alias) => {
+                    const mapping = k[alias];
+                    const raw = typeof mapping === "function"
+                        ? mapping(value)
+                        : value[mapping];
+                    // Reject function-valued results across every form — DTOs are
+                    // for serialization and functions can't cross a wire.
+                    if (typeof raw === "function")
+                        return;
+                    acc[alias] = DtoFactory._serializeValue(raw);
+                });
                 return acc;
-            }, {});
-        }
-        else {
-            dto = keys.reduce((acc, k) => {
-                if (typeof k === "object") {
-                    Object.keys(k).forEach((alias) => {
-                        const key = k[alias];
-                        if (typeof key === "function")
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            acc[alias] = key(value);
-                        else
-                            acc[alias] = value[key];
-                        if (acc[alias] == null)
-                            acc[alias] = null;
-                    });
-                }
-                else {
-                    let val = value[k];
-                    if (typeof val === "function")
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                        return acc;
-                    if (val instanceof Serializable)
-                        val = val.serialize();
-                    acc[k] = val;
-                    if (acc[k] == null)
-                        acc[k] = null;
-                }
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            }
+            const raw = value[k];
+            if (typeof raw === "function")
                 return acc;
-            }, {});
-        }
-        dto.$typename = typename;
+            acc[k] = DtoFactory._serializeValue(raw);
+            return acc;
+        }, {});
+        dto["$typename"] = typename;
         return dto;
+    }
+    /**
+     * Recursively projects a value into its DTO-safe form, mirroring the
+     * traversal rules of {@link Serializable.serialize}:
+     *
+     * - `null` / `undefined` → `null` (preserves the key for JSON wire format)
+     * - `Serializable` instance → its `.serialize()` output
+     * - Array → each element processed with the same rules
+     * - Plain object → deep-cloned via JSON round-trip
+     * - Scalar → passed through
+     *
+     * Function values are treated as `null` here as a runtime backstop —
+     * the type system already rejects them at the call site, but JS consumers
+     * and `as any` casts can slip functions in at runtime.
+     */
+    static _serializeValue(val) {
+        if (val == null)
+            return null;
+        if (typeof val === "function")
+            return null;
+        if (typeof val !== "object")
+            return val;
+        if (Array.isArray(val))
+            return val.map((element) => {
+                if (element == null)
+                    return null;
+                if (typeof element === "function")
+                    return null;
+                if (typeof element === "object") {
+                    if (element instanceof Serializable)
+                        return element.serialize();
+                    return JSON.parse(JSON.stringify(element));
+                }
+                return element;
+            });
+        if (val instanceof Serializable)
+            return val.serialize();
+        return JSON.parse(JSON.stringify(val));
     }
 }
 //# sourceMappingURL=dto-factory.js.map

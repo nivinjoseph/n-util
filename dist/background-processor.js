@@ -1,5 +1,5 @@
 import { given } from "@nivinjoseph/n-defensive";
-import { Delay } from "./delay.js";
+import { Deferred } from "./deferred.js";
 import { ObjectDisposedException } from "@nivinjoseph/n-exception";
 /**
  * A class that processes actions in the background with configurable intervals and error handling.
@@ -17,6 +17,7 @@ export class BackgroundProcessor {
     _actionsExecuting = new Array();
     _isDisposed = false;
     _timeout = null;
+    _drainDeferred = null;
     /**
      * Gets the current number of actions waiting to be processed.
      */
@@ -54,12 +55,17 @@ export class BackgroundProcessor {
     /**
      * Disposes of the processor and optionally kills the remaining queue.
      *
-     * @param killQueue - Whether to kill the remaining queue (default: false)
+     * Returns a promise that resolves once every in-flight action has finished
+     * (and, when `killQueue` is false, every queued action has been drained).
+     * Concurrent `dispose()` callers share the same drain promise — there is
+     * no polling, so shutdown latency equals the slowest remaining action.
+     *
+     * @param killQueue - Whether to drop the remaining queue (default: false)
      * @returns Promise that resolves when disposal is complete
      */
-    async dispose(killQueue = false) {
+    dispose(killQueue = false) {
         if (this._isDisposed)
-            return;
+            return this._drainDeferred?.promise ?? Promise.resolve();
         this._isDisposed = true;
         if (this._timeout)
             clearTimeout(this._timeout);
@@ -67,11 +73,13 @@ export class BackgroundProcessor {
             while (this._actionsToProcess.length > 0) {
                 const action = this._actionsToProcess.shift();
                 this._actionsExecuting.push(action);
-                action.execute(() => this._actionsExecuting.remove(action));
+                action.execute(() => this._onActionComplete(action));
             }
         }
-        while (this._actionsExecuting.length > 0)
-            await Delay.seconds(3);
+        if (this._actionsExecuting.length === 0)
+            return Promise.resolve();
+        this._drainDeferred = new Deferred();
+        return this._drainDeferred.promise;
     }
     /**
      * Initiates the background processing loop.
@@ -87,15 +95,29 @@ export class BackgroundProcessor {
             if (this._actionsToProcess.length > 0) {
                 const action = this._actionsToProcess.shift();
                 this._actionsExecuting.push(action);
-                action.execute(() => {
-                    this._actionsExecuting.remove(action);
-                    this._initiateBackgroundProcessing();
-                });
+                action.execute(() => this._onActionComplete(action));
             }
             else {
                 this._initiateBackgroundProcessing();
             }
         }, timeout);
+    }
+    /**
+     * Unified action-completion handler for both normal operation and drain.
+     *
+     * During normal operation, removes the action from the in-flight list and
+     * schedules the next iteration. During disposal, removes the action and
+     * — when the in-flight list is empty — resolves the drain deferred that
+     * `dispose()` is awaiting.
+     */
+    _onActionComplete(action) {
+        this._actionsExecuting.remove(action);
+        if (this._isDisposed) {
+            if (this._actionsExecuting.length === 0 && this._drainDeferred != null)
+                this._drainDeferred.resolve();
+            return;
+        }
+        this._initiateBackgroundProcessing();
     }
 }
 /**

@@ -15,6 +15,7 @@ export declare class BackgroundProcessor implements Disposable {
     private readonly _actionsExecuting;
     private _isDisposed;
     private _timeout;
+    private _drainDeferred;
     /**
      * Gets the current number of actions waiting to be processed.
      */
@@ -38,7 +39,12 @@ export declare class BackgroundProcessor implements Disposable {
     /**
      * Disposes of the processor and optionally kills the remaining queue.
      *
-     * @param killQueue - Whether to kill the remaining queue (default: false)
+     * Returns a promise that resolves once every in-flight action has finished
+     * (and, when `killQueue` is false, every queued action has been drained).
+     * Concurrent `dispose()` callers share the same drain promise — there is
+     * no polling, so shutdown latency equals the slowest remaining action.
+     *
+     * @param killQueue - Whether to drop the remaining queue (default: false)
      * @returns Promise that resolves when disposal is complete
      */
     dispose(killQueue?: boolean): Promise<void>;
@@ -47,5 +53,14 @@ export declare class BackgroundProcessor implements Disposable {
      * This method is called automatically by the constructor.
      */
     private _initiateBackgroundProcessing;
+    /**
+     * Unified action-completion handler for both normal operation and drain.
+     *
+     * During normal operation, removes the action from the in-flight list and
+     * schedules the next iteration. During disposal, removes the action and
+     * — when the in-flight list is empty — resolves the drain deferred that
+     * `dispose()` is awaiting.
+     */
+    private _onActionComplete;
 }
 //# sourceMappingURL=background-processor.d.ts.map

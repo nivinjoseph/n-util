@@ -1,4 +1,6 @@
 import { given } from "@nivinjoseph/n-defensive";
+const _webCrypto = globalThis.crypto
+    ?? (await import("node:crypto")).webcrypto;
 /**
  * Utility class providing various helper methods for common programming patterns
  * including retry logic, async/sync conversion, error handling, and random value generation.
@@ -339,7 +341,18 @@ export class Make // static class
             .ensure(t => t > min, "value has to be greater than min");
         min = Math.ceil(min);
         max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min; // The maximum is exclusive and the minimum is inclusive
+        const range = max - min;
+        const bound = 0x1_0000_0000; // 2^32
+        given(range, "range").ensure(t => t <= bound, `range between min and max must be <= ${bound}`);
+        // Uniform sampling in [0, range) via rejection sampling to avoid modulo bias.
+        const limit = bound - (bound % range);
+        const buf = new Uint32Array(1);
+        let r;
+        do {
+            _webCrypto.getRandomValues(buf);
+            r = buf[0];
+        } while (r >= limit);
+        return (r % range) + min; // max exclusive, min inclusive
     }
     /**
      * Generates a random alphanumeric code of specified length.

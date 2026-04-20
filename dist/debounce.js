@@ -22,6 +22,14 @@ function createReplacementMethod(target, context, delay) {
     given(kind, "kind").ensureHasValue().ensureIsString().ensure(t => t === "method", "debounce decorator can only be used on a method");
     const activeKey = Symbol.for(`@nivinjoseph/n-util/debounce/${String(name)}/isActive`);
     const scheduledCallKey = Symbol.for(`@nivinjoseph/n-util/debounce/${String(name)}/scheduledCall`);
+    // Mirror the initialization pattern used by throttle/dedupe: explicitly set
+    // the backing fields on each instance rather than relying on the
+    // `undefined`-is-falsy coincidence. Makes a future tightening of the
+    // in-loop checks (e.g. `=== null` instead of `!= null`) safe.
+    context.addInitializer(function () {
+        this[activeKey] = false;
+        this[scheduledCallKey] = null;
+    });
     return async function (...args) {
         this[scheduledCallKey] = async () => {
             await target.call(this, ...args);

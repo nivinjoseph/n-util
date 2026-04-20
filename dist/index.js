@@ -21,9 +21,6 @@ export { debounce } from "./debounce.js";
 export { dedupe } from "./dedupe.js";
 export { synchronize } from "./synchronize.js";
 export { throttle } from "./throttle.js";
-export { DateTime } from "./date-time.js";
-export { DateTimeFormat, DateTimeFormat_DEFAULT } from "./date-time-format.js";
-export { DateTimeSpan } from "./date-time-span.js";
 // export
 // {
 //     Make, Delay, Disposable, BackgroundProcessor, Uuid, TypeHelper, Duration, Time, ImageHelper, Deferred, Mutex, Version,

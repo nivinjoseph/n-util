@@ -13,11 +13,16 @@ export declare class ImageHelper {
      */
     private constructor();
     /**
-     * Converts a data URL to a Buffer object.
+     * Converts a base64-encoded image data URL to a Buffer.
      *
-     * @param dataUrl - The data URL string to convert (e.g., "data:image/png;base64,...")
-     * @returns A Buffer containing the image data
-     * @throws Error if the data URL is invalid or empty
+     * The input must be a well-formed data URL of the shape
+     * `data:image/<subtype>[;param=value]*;base64,<payload>`.
+     * Non-image MIME types and non-base64 payloads are rejected — use a
+     * generic data-URL parser for those cases.
+     *
+     * @param dataUrl - The data URL string to convert
+     * @returns A Buffer containing the decoded image bytes
+     * @throws Error if the value is not a base64-encoded `image/*` data URL
      *
      * @example
      * ```typescript

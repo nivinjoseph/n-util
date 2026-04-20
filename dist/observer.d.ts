@@ -78,6 +78,13 @@ export declare class Observer<T> implements Observable<T> {
     /**
      * Subscribes to events from this observer.
      *
+     * Callbacks are invoked without a `this` binding — passing an unbound
+     * method (e.g. `observer.subscribe(this.handle)`) will leave `this`
+     * undefined inside the handler, matching the standard behavior of
+     * Node's `EventEmitter`, DOM events, `setTimeout`, etc. If you need
+     * instance context inside the callback, use an arrow method or a
+     * pre-bound reference (`observer.subscribe(this.handle.bind(this))`).
+     *
      * @param callback - Function to be called when an event occurs
      * @returns A subscription object that can be used to unsubscribe
      * @throws ArgumentException if callback is null or undefined
