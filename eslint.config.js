@@ -155,7 +155,12 @@ export default defineConfig(
             ],
             "default-param-last": "off",
             "@typescript-eslint/default-param-last": "error",
-            "@typescript-eslint/explicit-function-return-type": "error",
+            "@typescript-eslint/explicit-function-return-type": [
+                "error",
+                {
+                    "allowExpressions": true
+                }
+            ],
             "@typescript-eslint/explicit-member-accessibility": "error",
             "@typescript-eslint/explicit-module-boundary-types": "error",
             "func-call-spacing": "off",

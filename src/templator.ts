@@ -55,10 +55,15 @@ export class Templator
 
 
     /**
-     * Renders the template with the provided data.
+     * Renders the template with the provided data, leaving all substitutions raw.
+     *
+     * Use this for plain-text contexts only (emails, logs, SMS, file paths).
+     * For any HTML-bearing output, use {@link renderHtml} instead — `renderText`
+     * does NOT escape `<`, `>`, `&`, `'`, `"` and will produce an XSS sink
+     * if the rendered string is later injected into the DOM.
      *
      * @param data - An object containing values for the template tokens
-     * @returns The rendered template string
+     * @returns The rendered template string with raw (unescaped) substitutions
      * @throws Error if the data is not a valid object
      *
      * @example
@@ -67,14 +72,42 @@ export class Templator
      * const templator = new Templator(template);
      *
      * const data = { name: "World" };
-     * console.log(templator.render(data)); // "Hello, World!"
+     * console.log(templator.renderText(data)); // "Hello, World!"
      * ```
      */
-    public render(data: object): string
+    public renderText(data: object): string
     {
         given(data, "data").ensureHasValue().ensureIsObject();
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return Mustache.render(this._template, data, null as any, { escape: (t) => t });
+    }
+
+
+    /**
+     * Renders the template with the provided data, HTML-escaping every
+     * `{{token}}` substitution via Mustache's default escaper.
+     *
+     * Use this whenever the rendered output is placed into an HTML context
+     * (innerHTML, SSR output, rendered email bodies). If a specific field
+     * must render raw, use Mustache's triple-brace syntax `{{{token}}}` in
+     * the template itself — that makes the opt-out explicit and reviewable.
+     *
+     * @param data - An object containing values for the template tokens
+     * @returns The rendered template string with HTML-escaped substitutions
+     * @throws Error if the data is not a valid object
+     *
+     * @example
+     * ```typescript
+     * const templator = new Templator("<div>Welcome {{name}}</div>");
+     * templator.renderHtml({ name: "<script>alert(1)</script>" });
+     * // "<div>Welcome &lt;script&gt;alert(1)&lt;&#x2F;script&gt;</div>"
+     * ```
+     */
+    public renderHtml(data: object): string
+    {
+        given(data, "data").ensureHasValue().ensureIsObject();
+
+        return Mustache.render(this._template, data);
     }
 }

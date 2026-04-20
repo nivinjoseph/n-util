@@ -96,6 +96,13 @@ export class Observer<T> implements Observable<T>
     /**
      * Subscribes to events from this observer.
      *
+     * Callbacks are invoked without a `this` binding — passing an unbound
+     * method (e.g. `observer.subscribe(this.handle)`) will leave `this`
+     * undefined inside the handler, matching the standard behavior of
+     * Node's `EventEmitter`, DOM events, `setTimeout`, etc. If you need
+     * instance context inside the callback, use an arrow method or a
+     * pre-bound reference (`observer.subscribe(this.handle.bind(this))`).
+     *
      * @param callback - Function to be called when an event occurs
      * @returns A subscription object that can be used to unsubscribe
      * @throws ArgumentException if callback is null or undefined
@@ -175,7 +182,11 @@ export class Observer<T> implements Observable<T>
      */
     public cancel(): void
     {
-        for (const key of this._subMap.keys())
+        // Snapshot the keys before iterating — `_cancel` mutates `_subMap`,
+        // and iterating a live Map while deleting its current key works
+        // today but is fragile to future refactors that reorder or filter
+        // the traversal.
+        for (const key of [...this._subMap.keys()])
             this._cancel(key);
     }
 

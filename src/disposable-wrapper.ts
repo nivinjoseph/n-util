@@ -43,7 +43,21 @@ export class DisposableWrapper implements Disposable
         if (!this._isDisposed)
         {
             this._isDisposed = true;
-            this._disposePromise = this._disposeFunc();
+
+            // Guard against a synchronously-throwing `_disposeFunc`. Without
+            // this try/catch the sync throw escapes the first call, the
+            // assignment to `_disposePromise` is skipped, and the second call
+            // returns `null` — violating the declared `Promise<void>` return
+            // type. Converting the throw to a rejected promise keeps repeat
+            // calls consistent and truthful about the return shape.
+            try
+            {
+                this._disposePromise = this._disposeFunc();
+            }
+            catch (e)
+            {
+                this._disposePromise = Promise.reject(e);
+            }
         }
 
         return this._disposePromise!;

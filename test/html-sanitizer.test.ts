@@ -367,6 +367,205 @@ await describe("HtmlSanitizer", async () =>
         });
     });
 
+    await describe("Dangerous CSS Prevention", async () =>
+    {
+        await test("should strip position property (clickjacking vector)", () =>
+        {
+            const html = "<div style=\"position: fixed; top: 0; left: 0; width: 100%; height: 100%;\">overlay</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("position"), `position should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("top:") && !sanitized.includes("top ") || !sanitized.match(/\btop\b\s*:/), "top should be stripped");
+            assert.ok(!sanitized.match(/\bleft\b\s*:/), "left should be stripped");
+        });
+
+        await test("should strip z-index (clickjacking vector)", () =>
+        {
+            const html = "<div style=\"z-index: 9999;\">overlay</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("z-index"), `z-index should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should strip transform (clickjacking vector)", () =>
+        {
+            const html = "<div style=\"transform: translate(100px, 100px);\">moved</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("transform"), `transform should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should strip opacity (UI-spoofing vector)", () =>
+        {
+            const html = "<div style=\"opacity: 0.01;\">invisible</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("opacity"), `opacity should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should strip background-image (url() exfil vector)", () =>
+        {
+            const html = "<div style=\"background-image: url(https://evil.example/leak);\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("background-image"), `background-image should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("evil.example"), "url target should not leak into output");
+        });
+
+        await test("should strip background shorthand (url() exfil vector)", () =>
+        {
+            const html = "<div style=\"background: url(https://evil.example/leak) no-repeat;\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.match(/background\s*:/), `background shorthand should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("evil.example"), "url target should not leak into output");
+        });
+
+        await test("should strip cursor (url() exfil vector)", () =>
+        {
+            const html = "<div style=\"cursor: url(https://evil.example/c.cur), auto;\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("cursor"), `cursor should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("evil.example"));
+        });
+
+        await test("should strip content (url() / attr() exfil vector)", () =>
+        {
+            const html = "<div style=\"content: url(https://evil.example/x);\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.match(/\bcontent\s*:/), `content should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should strip filter (SVG-filter url() exfil vector)", () =>
+        {
+            const html = "<div style=\"filter: url(https://evil.example/f.svg#x);\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("filter"), `filter should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should reject display:<arbitrary> outside tight enum", () =>
+        {
+            const html = "<div style=\"display: -webkit-box; color: red;\">x</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("-webkit-box"), `exotic display value should be rejected, got: ${sanitized}`);
+            assert.ok(sanitized.includes("color"), "safe sibling properties should survive");
+        });
+
+        await test("should accept safe typography alongside rejected dangerous props", () =>
+        {
+            const html = "<div style=\"color: red; position: fixed; padding: 10px; z-index: 5;\">mix</div>";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(sanitized.includes("color"), "color should be preserved");
+            assert.ok(sanitized.includes("red"), "color value should be preserved");
+            assert.ok(sanitized.includes("padding"), "padding should be preserved");
+            assert.ok(!sanitized.includes("position"), "position should be stripped");
+            assert.ok(!sanitized.includes("z-index"), "z-index should be stripped");
+        });
+    });
+
+    await describe("Image data URI allowlist", async () =>
+    {
+        await test("should strip src for SVG data URI (script-bearing payload)", () =>
+        {
+            // base64("<svg xmlns='http://www.w3.org/2000/svg' onload='alert(1)'/>")
+            const payload = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIG9ubG9hZD0nYWxlcnQoMSknLz4=";
+            const html = `<img src="${payload}" alt="x" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("data:image/svg"), `SVG data URI should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("onload"), "no onload should leak through");
+            assert.ok(!sanitized.includes("alert"), "no alert should leak through");
+        });
+
+        await test("should strip src for plain (non-base64) SVG data URI", () =>
+        {
+            const payload = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' onload='alert(1)'/>";
+            const html = `<img src="${payload}" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("data:image/svg"), `SVG data URI should be stripped, got: ${sanitized}`);
+            assert.ok(!sanitized.includes("onload"));
+        });
+
+        await test("should strip src for text/html data URI", () =>
+        {
+            const payload = "data:text/html,<script>alert(1)</script>";
+            const html = `<img src="${payload}" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("text/html"), `text/html data URI should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should strip src for application/xhtml+xml data URI", () =>
+        {
+            const payload = "data:application/xhtml+xml;base64,PGh0bWw+PC9odG1sPg==";
+            const html = `<img src="${payload}" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("application/xhtml"), `xhtml data URI should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should preserve PNG data URI", () =>
+        {
+            const payload = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            const html = `<img src="${payload}" alt="px" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(sanitized.includes("data:image/png"), `PNG data URI should survive, got: ${sanitized}`);
+        });
+
+        await test("should preserve JPEG data URI (both jpeg and jpg spellings)", () =>
+        {
+            const jpeg = "<img src=\"data:image/jpeg;base64,/9j/4AAQSkZJRg==\" />";
+            const jpg = "<img src=\"data:image/jpg;base64,/9j/4AAQSkZJRg==\" />";
+            assert.ok(HtmlSanitizer.sanitize(jpeg).includes("data:image/jpeg"), "jpeg should survive");
+            assert.ok(HtmlSanitizer.sanitize(jpg).includes("data:image/jpg"), "jpg should survive");
+        });
+
+        await test("should preserve GIF and WebP data URIs", () =>
+        {
+            const gif = "<img src=\"data:image/gif;base64,R0lGODlhAQABAAAAACw=\" />";
+            const webp = "<img src=\"data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAv\" />";
+            assert.ok(HtmlSanitizer.sanitize(gif).includes("data:image/gif"));
+            assert.ok(HtmlSanitizer.sanitize(webp).includes("data:image/webp"));
+        });
+
+        await test("should not affect http/https image URLs", () =>
+        {
+            const html = "<img src=\"https://example.com/photo.jpg\" />";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(sanitized.includes("https://example.com/photo.jpg"));
+        });
+
+        await test("should not be fooled by case-varied SVG MIME type", () =>
+        {
+            const html = "<img src=\"DATA:IMAGE/SVG+XML,<svg onload=alert(1)/>\" />";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.toLowerCase().includes("svg"), `case-varied SVG should still be stripped, got: ${sanitized}`);
+        });
+
+        await test("should not be fooled by leading whitespace in data URI", () =>
+        {
+            const html = "<img src=\"   data:image/svg+xml,<svg onload=alert(1)/>\" />";
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(!sanitized.includes("svg"), `leading-whitespace SVG should be stripped, got: ${sanitized}`);
+        });
+
+        await test("should preserve non-src attributes on stripped-src img", () =>
+        {
+            const payload = "data:image/svg+xml,<svg onload=alert(1)/>";
+            const html = `<img src="${payload}" alt="keep me" class="keep-me" />`;
+            const sanitized = HtmlSanitizer.sanitize(html);
+            assert.ok(sanitized.includes("alt=\"keep me\""), "alt should survive even when src is stripped");
+            assert.ok(sanitized.includes("class=\"keep-me\""), "class should survive even when src is stripped");
+            assert.ok(!sanitized.includes("data:image/svg"));
+        });
+    });
+
+    await describe("Shared-state isolation", async () =>
+    {
+        await test("should not mutate sanitize-html library defaults", async () =>
+        {
+            const sanitizeHtml = (await import("sanitize-html")).default;
+            const before = JSON.parse(JSON.stringify(sanitizeHtml.defaults.allowedAttributes));
+
+            HtmlSanitizer.sanitize("<div class=\"x\" style=\"color: red;\">hi</div>");
+
+            const after = JSON.parse(JSON.stringify(sanitizeHtml.defaults.allowedAttributes));
+            assert.deepStrictEqual(after, before, "HtmlSanitizer must not mutate sanitize-html shared defaults");
+            assert.ok(!("*" in sanitizeHtml.defaults.allowedAttributes), "wildcard '*' key should not leak into shared defaults");
+        });
+    });
+
     await describe("Real World Examples", async () =>
     {
         await test("should sanitize user comment with XSS attempt", () =>

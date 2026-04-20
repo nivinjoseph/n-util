@@ -84,6 +84,16 @@ function createReplacementMethod<
     const activeKey = Symbol.for(`@nivinjoseph/n-util/debounce/${String(name)}/isActive`);
     const scheduledCallKey = Symbol.for(`@nivinjoseph/n-util/debounce/${String(name)}/scheduledCall`);
 
+    // Mirror the initialization pattern used by throttle/dedupe: explicitly set
+    // the backing fields on each instance rather than relying on the
+    // `undefined`-is-falsy coincidence. Makes a future tightening of the
+    // in-loop checks (e.g. `=== null` instead of `!= null`) safe.
+    context.addInitializer(function (this)
+    {
+        (this as any)[activeKey] = false;
+        (this as any)[scheduledCallKey] = null;
+    });
+
     return async function (this: This, ...args: Args)
     {
         (this as any)[scheduledCallKey] = async (): Promise<void> =>
