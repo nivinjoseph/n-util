@@ -136,7 +136,8 @@ export class Observer<T> implements Observable<T>
 
     /**
      * Notifies all subscribers about an event. The notification is delivered
-     * asynchronously using process.nextTick in Node.js or setTimeout in browsers.
+     * asynchronously by scheduling each callback on the microtask queue via
+     * queueMicrotask, which is supported in both Node.js and browsers.
      *
      * @param eventData - The data to be passed to subscribers
      *
@@ -152,22 +153,10 @@ export class Observer<T> implements Observable<T>
         if (!this.hasSubscriptions)
             return;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (process && process.nextTick)
+        for (const entry of this._subMap.values())
         {
-            for (const entry of this._subMap.values())
-            {
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                process.nextTick(entry.callback, eventData);
-            }
-        }
-        else
-        {
-            for (const entry of this._subMap.values())
-            {
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                setTimeout(entry.callback, 0, eventData);
-            }
+            const callback = entry.callback;
+            queueMicrotask(() => callback(eventData));
         }
     }
 
@@ -219,5 +208,6 @@ interface SubInfo<T>
     /** The subscription object */
     subscription: Subscription;
     /** The callback function to be called when an event occurs */
-    callback(eventData: T): void;
+    // eslint-disable-next-line @typescript-eslint/method-signature-style
+    callback: (eventData: T) => void;
 }
