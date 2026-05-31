@@ -99,7 +99,8 @@ export declare class Observer<T> implements Observable<T> {
     subscribe(callback: (eventData: T) => void): Subscription;
     /**
      * Notifies all subscribers about an event. The notification is delivered
-     * asynchronously using process.nextTick in Node.js or setTimeout in browsers.
+     * asynchronously by scheduling each callback on the microtask queue via
+     * queueMicrotask, which is supported in both Node.js and browsers.
      *
      * @param eventData - The data to be passed to subscribers
      *
