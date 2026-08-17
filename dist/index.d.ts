@@ -16,7 +16,7 @@ export { Profiler, ProfilerTrace } from "./profiler.js";
 export { Templator } from "./templator.js";
 export { HtmlSanitizer } from "./html-sanitizer.js";
 export { Serializable, serialize, Deserializer, SerializableClass, SerializableClassGetter, SerializeGetterDecorator } from "./serializable.js";
-export { DtoFactory } from "./dto-factory.js";
+export { DtoFactory, DtoKey, DtoOf, DtoValue } from "./dto-factory.js";
 export { PartialPick, Schema, PartialSchema, ClassDefinition, ClassHierarchy } from "./utility-types.js";
 export { Observer, Observable, Subscription } from "./observer.js";
 export { debounce, DebounceMethodDecorator } from "./debounce.js";

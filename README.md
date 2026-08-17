@@ -68,10 +68,10 @@ A comprehensive collection of utility functions and decorators for TypeScript/Ja
   - Property-level control
   - Metadata support
   - Nested object handling
-- [DtoFactory](docs/dto-factory.md) - Data Transfer Object creation
-  - Automatic DTO generation
-  - Property mapping
-  - Transform functions
+- [DtoFactory](docs/dto-factory.md) - Data Transfer Object projection
+  - DTO type inferred from the key list
+  - Property renaming and derived values
+  - Projections carry no `$typename` — use `serialize()` to round-trip
 
 ### UI and Content
 - [HtmlSanitizer](docs/html-sanitizer.md) - HTML content processing

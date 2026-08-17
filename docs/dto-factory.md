@@ -1,276 +1,334 @@
 # DTO Factory
 
-The `DtoFactory` class provides a utility for creating Data Transfer Objects (DTOs) from complex objects, with support for both plain objects and `Serializable` instances.
+`DtoFactory` projects an object into a **DTO** — a plain, JSON-safe wire shape built from a subset of the source's properties, optionally renamed or derived.
+
+The returned type is **inferred from the keys you pass**, so the DTO is a checked contract rather than an assertion:
+
+```typescript
+const dto = DtoFactory.create(user, ["id", "name"]);
+//    ^? { id: string; name: string }
+
+const bad: UserSchema = DtoFactory.create(user, ["id"]);
+//    ^ Error: Property 'name' is missing
+```
 
 ## Features
 
-- Automatic DTO creation from complex objects
-- Support for both plain objects and `Serializable` instances
-- Flexible key mapping with aliases
-- Type safety with TypeScript generics
-- Automatic null handling
-- Type name preservation
+- DTO type inferred from the key list — a missing or misspelled key is a compile error
+- Three key forms: direct copy, rename, and derived value
+- Recursive serialization of nested `Serializable` values
+- Automatic null coercion, so the wire shape is stable
+- Method keys and unprojectable values rejected at compile time
 
-## Usage
+## The projection contract
 
-### Basic Usage with Proper Class Structure
+This is the most important thing to understand about `DtoFactory`, and the thing that distinguishes it from `Serializable.serialize()`.
+
+A DTO is a **projection**: a subset, possibly renamed, possibly derived. It is therefore **not** a serialization, and it carries **no top-level `$typename`** — ever.
+
+Why this matters: if a projection claimed a `$typename`, `Deserializer.deserialize` would find that type registered and call `new Type(partialData)`, silently constructing a half-built instance from a payload that was never meant to round-trip. So:
 
 ```typescript
-import { DtoFactory } from "n-util";
+const dto = DtoFactory.create(user, ["name"]);
+Deserializer.deserialize(dto);   // throws — by design
 
-class User {
-    private _id: string;
-    private _name: string;
-    private _email: string;
-    private _age: number;
-
-    get id(): string { return this._id; }
-    get name(): string { return this._name; }
-    get email(): string { return this._email; }
-    get age(): number { return this._age; }
-    
-    constructor(id: string, name: string, email: string, age: number) {
-        this._id = id;
-        this._name = name;
-        this._email = email;
-        this._age = age;
-    }
-}
-
-// Create an instance properly
-const user = new User("123", "John Doe", "john@example.com", 30);
-
-// Create a DTO with selected properties
-const userDto = DtoFactory.create(user, ["id", "name", "email"]);
-// Result: { id: "123", name: "John Doe", email: "john@example.com" }
+user.serialize();                // use this when you need something that round-trips
 ```
 
-### Using Aliases with Proper Class Structure
+Nested `Serializable` values are a different matter. They are emitted via their own `.serialize()`, so they use their `@serialize("customKey")` keys **and keep their own `$typename`** — those *are* complete serializations and *do* round-trip.
+
+| level | keyed by | `$typename` |
+|---|---|---|
+| top | the property name or alias **you** wrote | never |
+| nested | the value's own `@serialize` keys | yes |
+
+The asymmetry is deliberate. Here it is in one example:
 
 ```typescript
-// Define a proper class with constructor and properties
-class Product {
-    private _id: string;
-    private _name: string;
-    private _price: number;
-    private _category: string;
+type GeoData = { lat: number; lng: number; };
 
-    get id(): string { return this._id; }
-    get name(): string { return this._name; }
-    get price(): number { return this._price; }
-    get category(): string { return this._category; }
+@serialize
+class Geo extends Serializable<GeoData>
+{
+    // property is `latitude`; the wire key is `lat`
+    @serialize("lat") public get latitude(): number { return this._latitude; }
+    @serialize("lng") public get longitude(): number { return this._longitude; }
 
-    constructor(id: string, name: string, price: number, category: string) {
-        this._id = id;
-        this._name = name;
-        this._price = price;
-        this._category = category;
+    public constructor(data: GeoData)
+    {
+        super(data);
+        this._latitude = data.lat;
+        this._longitude = data.lng;
     }
 }
 
-// Create an instance properly
-const product = new Product("P001", "Laptop", 999.99, "Electronics");
-
-// Create a DTO with property aliases
-const productDto = DtoFactory.create(product, [
-    "id",
-    { productName: "name" },
-    { formattedPrice: (p) => `$${p.price.toFixed(2)}` },
-    { categoryId: (p) => p.category.toLowerCase() }
-]);
-// Result: { 
-//   id: "P001", 
-//   productName: "Laptop", 
-//   formattedPrice: "$999.99",
-//   categoryId: "electronics"
+DtoFactory.create(holder, [{ position: "geo" }]);
+// {
+//     position: {                 <- your alias
+//         lat: 45.4,              <- Geo's @serialize keys, not `latitude`
+//         lng: -75.7,
+//         $typename: "Geo"        <- legitimate: this level does round-trip
+//     }
 // }
+// ...and no $typename at the top level.
 ```
 
-### With Serializable Objects and Proper Class Structure
+Because the top level is keyed by property name, form-1 keys are `keyof T`. That is exactly what makes inference possible.
+
+## The three key forms
 
 ```typescript
-import { Serializable, serialize } from "n-util";
+type UserData = { name: string; email: string; };
 
-// Define a proper Serializable class
-class Order extends Serializable {
-    private _id: string;
-    private _customer: User;
-    private _items: Product[];
-    private _total: number;
+@serialize
+class User extends Serializable<UserData>
+{
+    private readonly _name: string;
+    private readonly _email: string;
 
-    get id(): string { return this._id; }
-    get customer(): User { return this._customer; }
-    get items(): Product[] { return this._items; }
-    get total(): number { return this._total; }
+    @serialize public get name(): string { return this._name; }
+    @serialize public get email(): string { return this._email; }
 
-    constructor(id: string, customer: User, items: Product[]) {
-        super();
-        this._id = id;
-        this._customer = customer;
-        this._items = items;
-        this._total = this._calculateTotal();
+    public constructor(data: UserData)
+    {
+        super(data);
+        this._name = data.name;
+        this._email = data.email;
     }
 
-    private _calculateTotal(): number {
-        return this._items.reduce((sum, item) => sum + item.price, 0);
-    }
-
-    // Override serialize method if needed
-    public override serialize(): Record<string, any> {
-        return {
-            id: this._id,
-            customer: this._customer.serialize(),
-            items: this._items.map(item => item.serialize()),
-            total: this._total
-        };
-    }
+    public greet(): string { return `hi ${this._name}`; }
 }
-
-const user = new User("123", "John Doe", "john@example.com", 30);
-const product = new Product("P001", "Laptop", 999.99, "Electronics");
-const order = new Order("O001", user, [product]);
-
-// Create a DTO from a Serializable instance
-const orderDto = DtoFactory.create(order, [
-    "id",
-    { customerName: (o) => o.customer.name },
-    { itemCount: (o) => o.items.length },
-    { formattedTotal: (o) => `$${o.total.toFixed(2)}` }
-]);
-// Result: { 
-//   id: "O001", 
-//   customerName: "John Doe",
-//   itemCount: 1,
-//   formattedTotal: "$999.99"
-// }
 ```
+
+**Form 1 — direct copy.** A property name; the DTO uses the same key.
+
+```typescript
+DtoFactory.create(user, ["name", "email"]);
+// ^? { name: string; email: string }
+```
+
+**Form 2 — rename.** `{ alias: sourceKey }`.
+
+```typescript
+DtoFactory.create(user, [{ displayName: "name" }]);
+// ^? { displayName: string }
+```
+
+**Form 3 — derived.** `{ alias: transform }`. The parameter is contextually typed, so you don't need to annotate it.
+
+```typescript
+DtoFactory.create(user, [{ label: u => `${u.name} <${u.email}>` }]);
+// ^? { label: string }
+```
+
+All three mix freely in one call, and the results merge into a single flat object type:
+
+```typescript
+DtoFactory.create(user, ["name", { contact: "email" }, { label: u => u.name }]);
+// ^? { name: string; contact: string; label: string }
+```
+
+## Value traversal rules
+
+Each projected value is processed recursively, and the inferred type reflects what you actually get:
+
+| source value | DTO value | inferred type |
+|---|---|---|
+| `null` / `undefined` | `null` | `null` |
+| optional property | `null` when absent | `T \| null` |
+| function | `null` | `null` |
+| `Serializable<TData>` | its `.serialize()` output | `TData & { $typename: string }` |
+| **`Date`** | **ISO 8601 string** | **`string`** |
+| array | element-wise, recursively | `Array<...>` |
+| plain object | deep-cloned via JSON round-trip | property-wise, recursively |
+| `Map` / `Set` / `Promise` | `{}` | `never` |
+| scalar | unchanged | unchanged |
+
+### Dates become strings
+
+Worth calling out, because it is easy to miss. Values are deep-cloned with a JSON round-trip, and `JSON.stringify` turns a `Date` into a string:
+
+```typescript
+class Event { public startsAt = new Date("2020-01-01T00:00:00Z"); }
+
+const dto = DtoFactory.create(new Event(), ["startsAt"]);
+// { startsAt: "2020-01-01T00:00:00.000Z" }
+// ^? { startsAt: string }
+```
+
+The type says `string`, so nothing silently lies to you. If you want a different format, convert explicitly in a transform.
+
+### Nullish values are coerced, never omitted
+
+A requested key is always present in the output. This keeps the wire shape stable — a list endpoint returns rows with identical key sets regardless of per-row values.
+
+```typescript
+class Sparse { public a = "x"; public b?: string; }
+
+DtoFactory.create(new Sparse(), ["a", "b"]);
+// { a: "x", b: null }   <- `b` is present and null, not missing
+```
+
+### Known limitation: a `Serializable` hidden inside a plain object
+
+Traversal does not walk into plain objects hunting for nested `Serializable` values:
+
+```typescript
+class Holder { public wrapper = { addr: new Address(...) }; }
+
+DtoFactory.create(new Holder(), ["wrapper"]);
+// { wrapper: { addr: { _street: "...", _city: "..." } } }
+//                     ^ private backing fields, because getters are not
+//                       own enumerable properties
+```
+
+Project such values explicitly instead — e.g. `[{ addr: h => h.wrapper.addr }]`, which hits the `Serializable` directly and serializes it properly.
+
+## Compile-time guarantees
+
+Method names are rejected, in both form 1 and form 2:
+
+```typescript
+DtoFactory.create(user, ["greet"]);
+// Error: '"greet"' is not assignable to type 'DtoKey<User>'
+
+DtoFactory.create(user, [{ g: "greet" }]);
+// Error: '"greet"' is not assignable to ...
+```
+
+Misspellings are rejected, since form-1 keys are `keyof T`:
+
+```typescript
+DtoFactory.create(user, ["nmae"]);   // Error
+```
+
+A transform returning something unprojectable doesn't error at the transform — it infers the type the runtime will actually produce, so the mistake surfaces where it matters:
+
+```typescript
+const dto = DtoFactory.create(user, [{ f: u => u.greet }]);
+// ^? { f: null }        <- the runtime nulls functions
+
+const bad: { f: string; } = dto;   // Error: 'null' is not assignable to 'string'
+```
+
+`Map`, `Set`, and `Promise` infer `never` for the same reason: JSON-cloning them yields `{}`, so a `never` turns a meaningless field into an error at the point of use.
+
+> Transform return types are intentionally **not** constrained by an up-front JSON-ish union. Such a union has to be written with a string index signature, which TypeScript grants implicitly to type aliases but **not** to interfaces — so it would reject perfectly JSON-safe interface-typed values. Inferring the real output type catches the same mistakes without the false positives.
 
 ## API Reference
 
-### DtoFactory Class
-```typescript
-class DtoFactory
-```
-A utility class for creating DTOs from complex objects.
+### `DtoFactory.create`
 
-#### Methods
-
-##### create
 ```typescript
-static create<T extends object, TDto extends {} = {}>(
+public static create<T extends object, const TKeys extends ReadonlyArray<DtoKey<T>>>(
     value: T,
-    keys: Array<keyof T | { [key: string]: keyof T | ((val: T) => any); }>
-): TDto
+    keys: TKeys
+): DtoOf<T, TKeys>
 ```
-Creates a DTO from the given object using the specified keys.
 
-- Parameters:
-  - `value`: The source object to create the DTO from
-  - `keys`: Array of property keys or key mappings to include in the DTO
-- Returns: A new DTO object containing the specified properties
-- Throws: Error if value is null or undefined, or if keys is not an array
+- **`value`** — the source object to project. Throws if null, undefined, or not an object.
+- **`keys`** — the keys to include. Throws if not an array.
+- **returns** — a new DTO with one entry per key, and no `$typename`.
 
-## Best Practices
+### Exported types
 
-1. **Class Structure**:
-   - Use proper constructors with parameter validation
-   - Use private fields with getters
-   - Implement proper encapsulation
-   - Use proper access modifiers
-   - Follow SOLID principles
+| type | purpose |
+|---|---|
+| `DtoKey<T>` | the three accepted key forms for a source type `T` |
+| `DtoOf<T, TKeys>` | the DTO type produced by projecting `T` through `TKeys` |
+| `DtoValue<V>` | what a single source value type becomes on the wire |
 
-2. **Type Safety**:
-   - Use TypeScript generics
-   - Define proper interfaces
-   - Use proper type guards
-   - Validate inputs
-   - Handle edge cases
+`DtoOf` is what you need to type a wrapper around `create`:
 
-3. **Property Selection**:
-   - Only include necessary properties
-   - Use aliases for better naming
-   - Use transform functions for complex values
-   - Handle null values properly
-   - Consider performance implications
-
-4. **Serializable Integration**:
-   - Extend Serializable properly
-   - Override serialize when needed
-   - Handle nested objects
-   - Preserve type information
-   - Consider circular references
-
-## Examples
-
-### Complex Object Transformation
 ```typescript
-// Define a proper class for complex data
-class Employee {
-    private _id: string;
-    private _personalInfo: {
-        firstName: string;
-        lastName: string;
-        birthDate: Date;
-    };
-    private _department: string;
-    private _salary: number;
+import { DtoFactory, DtoOf } from "@nivinjoseph/n-util";
 
-    constructor(
-        id: string,
-        firstName: string,
-        lastName: string,
-        birthDate: Date,
-        department: string,
-        salary: number
-    ) {
-        this._id = id;
-        this._personalInfo = { firstName, lastName, birthDate };
-        this._department = department;
-        this._salary = salary;
-    }
+const userKeys = ["id", "name", "email"] as const;
 
-    get id(): string { return this._id; }
-    get personalInfo(): { firstName: string; lastName: string; birthDate: Date } { 
-        return this._personalInfo; 
+function toUserDto(user: User): DtoOf<User, typeof userKeys>
+{
+    return DtoFactory.create(user, userKeys);
+}
+```
+
+## Complete example
+
+```typescript
+import { DtoFactory, Serializable, serialize } from "@nivinjoseph/n-util";
+
+type AddressData = { street: string; city: string; };
+
+@serialize
+class Address extends Serializable<AddressData>
+{
+    private readonly _street: string;
+    private readonly _city: string;
+
+    @serialize public get street(): string { return this._street; }
+    @serialize public get city(): string { return this._city; }
+
+    public constructor(data: AddressData)
+    {
+        super(data);
+        this._street = data.street;
+        this._city = data.city;
     }
-    get department(): string { return this._department; }
-    get salary(): number { return this._salary; }
 }
 
-// Create an instance properly
-const employee = new Employee(
-    "E001",
-    "John",
-    "Doe",
-    new Date("1990-01-01"),
-    "Engineering",
-    75000
-);
+type EmployeeData = { firstName: string; lastName: string; salary: number; };
 
-// Create a DTO with complex transformations
-const employeeDto = DtoFactory.create(employee, [
-    "id",
-    { 
-        fullName: (e) => `${e.personalInfo.firstName} ${e.personalInfo.lastName}`,
-        age: (e) => {
-            const today = new Date();
-            const birthDate = e.personalInfo.birthDate;
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age;
-        }
-    },
-    { departmentCode: (e) => e.department.substring(0, 3).toUpperCase() },
-    { formattedSalary: (e) => `$${e.salary.toLocaleString()}` }
+@serialize
+class Employee extends Serializable<EmployeeData>
+{
+    private readonly _firstName: string;
+    private readonly _lastName: string;
+    private readonly _salary: number;
+    private readonly _address: Address;
+    private readonly _hiredAt: Date;
+
+    @serialize public get firstName(): string { return this._firstName; }
+    @serialize public get lastName(): string { return this._lastName; }
+    @serialize public get salary(): number { return this._salary; }
+    @serialize public get address(): Address { return this._address; }
+
+    public get hiredAt(): Date { return this._hiredAt; }
+
+    public constructor(data: EmployeeData & { address: Address; hiredAt: Date; })
+    {
+        super(data);
+        this._firstName = data.firstName;
+        this._lastName = data.lastName;
+        this._salary = data.salary;
+        this._address = data.address;
+        this._hiredAt = data.hiredAt;
+    }
+}
+
+const dto = DtoFactory.create(employee, [
+    "salary",
+    "address",
+    { fullName: e => `${e.firstName} ${e.lastName}` },
+    { hiredOn: e => e.hiredAt.toISOString().split("T")[0] }
 ]);
-// Result: {
-//   id: "E001",
-//   fullName: "John Doe",
-//   age: 34,
-//   departmentCode: "ENG",
-//   formattedSalary: "$75,000"
+
+// {
+//     salary: 85000,
+//     address: { street: "711 Kennedy", city: "Ottawa", $typename: "Address" },
+//     fullName: "Jane Doe",
+//     hiredOn: "2019-04-01"
 // }
-``` 
+//
+// inferred as:
+// {
+//     salary: number;
+//     address: AddressData & { $typename: string };
+//     fullName: string;
+//     hiredOn: string;
+// }
+```
+
+Note `hiredAt` is converted explicitly with `.toISOString()`. Projecting it directly would also produce a string, but the explicit conversion states the format you want rather than inheriting whatever `JSON.stringify` does.
+
+## See also
+
+- [Serializable](serializable.md) — full, round-trippable serialization, and the `@serialize` decorator that `DtoFactory` relies on for nested values.

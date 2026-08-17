@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, test } from "node:test";
 import "@nivinjoseph/n-ext";
-import { DtoFactory, Serializable, serialize } from "../src/index.js";
+import { Deserializer, DtoFactory, Serializable, serialize } from "../src/index.js";
 
 
 type AddressData = { street: string; city: string; };
@@ -86,6 +86,53 @@ class PlainUser
 }
 
 
+type GeoData = { lat: number; lng: number; };
+
+@serialize
+class Geo extends Serializable<GeoData>
+{
+    private readonly _latitude: number;
+    private readonly _longitude: number;
+
+    // Note the custom serialization keys: the property is `latitude`, the wire key is `lat`.
+    @serialize("lat")
+    public get latitude(): number { return this._latitude; }
+
+    @serialize("lng")
+    public get longitude(): number { return this._longitude; }
+
+    public constructor(data: GeoData)
+    {
+        super(data);
+        this._latitude = data.lat;
+        this._longitude = data.lng;
+    }
+}
+
+
+class GeoHolder
+{
+    public geo: Geo = new Geo({ lat: 45.4, lng: -75.7 });
+}
+
+
+class DateHolder
+{
+    public when: Date = new Date("2020-01-01T00:00:00.000Z");
+    public meta: { at: Date; } = { at: new Date("2021-01-01T00:00:00.000Z") };
+    public stamps: Array<Date> = [new Date("2022-01-01T00:00:00.000Z")];
+}
+
+
+class GridHolder
+{
+    public grid: Array<Array<Address>> = [
+        [new Address({ street: "1 A St", city: "Alpha" })],
+        [new Address({ street: "2 B St", city: "Beta" })]
+    ];
+}
+
+
 await describe("DtoFactory", async () =>
 {
     const mkUser = (): User => new User({
@@ -115,6 +162,8 @@ await describe("DtoFactory", async () =>
         await test("recursively serializes a nested Serializable property", () =>
         {
             const dto = DtoFactory.create(mkUser(), ["name", "address"]);
+            // Nested $typename is contractual — nested Serializables are complete
+            // serializations and do round-trip. Do not "clean this up".
             assert.deepStrictEqual(dto["address"], {
                 street: "711 Kennedy",
                 city: "Ottawa",
@@ -125,6 +174,8 @@ await describe("DtoFactory", async () =>
         await test("recursively serializes an array of Serializable values", () =>
         {
             const dto = DtoFactory.create(new PlainUser(), ["friends"]);
+            // Nested $typename is contractual — nested Serializables are complete
+            // serializations and do round-trip. Do not "clean this up".
             assert.deepStrictEqual(dto["friends"], [
                 { street: "1 A St", city: "Alpha", $typename: "Address" },
                 { street: "2 B St", city: "Beta", $typename: "Address" }
@@ -147,13 +198,6 @@ await describe("DtoFactory", async () =>
             assert.deepStrictEqual(dto["tags"], ["admin", "beta"]);
         });
 
-        await test("coerces undefined / missing values to null", () =>
-        {
-            class Sparse { public a: string = "x"; public b?: string; }
-            const dto = DtoFactory.create(new Sparse(), ["a", "b"]);
-            assert.strictEqual(dto["a"], "x");
-            assert.strictEqual(dto["b"], null);
-        });
     });
 
 
@@ -168,6 +212,8 @@ await describe("DtoFactory", async () =>
         await test("recursively serializes a renamed nested Serializable", () =>
         {
             const dto = DtoFactory.create(mkUser(), [{ location: "address" }]);
+            // Nested $typename is contractual — nested Serializables are complete
+            // serializations and do round-trip. Do not "clean this up".
             assert.deepStrictEqual(dto["location"], {
                 street: "711 Kennedy",
                 city: "Ottawa",
@@ -197,6 +243,8 @@ await describe("DtoFactory", async () =>
             const dto = DtoFactory.create(mkUser(), [{
                 primaryAddress: (u: User): Address => u.address
             }]);
+            // Nested $typename is contractual — nested Serializables are complete
+            // serializations and do round-trip. Do not "clean this up".
             assert.deepStrictEqual(dto["primaryAddress"], {
                 street: "711 Kennedy",
                 city: "Ottawa",
@@ -210,6 +258,8 @@ await describe("DtoFactory", async () =>
             const dto = DtoFactory.create(user, [{
                 addresses: (u: User): Array<Address> => [u.address, u.address]
             }]);
+            // Nested $typename is contractual — nested Serializables are complete
+            // serializations and do round-trip. Do not "clean this up".
             assert.deepStrictEqual(dto["addresses"], [
                 { street: "711 Kennedy", city: "Ottawa", $typename: "Address" },
                 { street: "711 Kennedy", city: "Ottawa", $typename: "Address" }
@@ -234,31 +284,31 @@ await describe("DtoFactory", async () =>
     });
 
 
-    await describe("function-value rejection (runtime backstop)", async () =>
+    await describe("function-value coercion (runtime backstop)", async () =>
     {
-        await test("skips a string key whose property is a method (PlainUser)", () =>
+        await test("nulls a string key whose property is a method (PlainUser)", () =>
         {
             // TS-level rejection catches this statically; bypassing with `as any` to prove the runtime guard.
             const dto = DtoFactory.create(new PlainUser(), ["name", "computeScore" as any]);
-            assert.ok(!("computeScore" in dto), "method key should be absent from DTO");
+            assert.strictEqual((dto as any)["computeScore"], null, "method key should be null, not absent");
             assert.strictEqual(dto["name"], "Plain Jane");
         });
 
-        await test("skips an aliased form-2 key whose source is a method", () =>
+        await test("nulls an aliased form-2 key whose source is a method", () =>
         {
             const dto = DtoFactory.create(new PlainUser(), [{ fn: "computeScore" as any }]);
-            assert.ok(!("fn" in dto), "aliased method should be absent from DTO");
+            assert.strictEqual((dto as any)["fn"], null, "aliased method should be null, not absent");
         });
 
-        await test("nullifies a form-3 transform that returns a function", () =>
+        await test("nulls a form-3 transform that returns a function", () =>
         {
             // Deliberately returning an unbound method to exercise the runtime guard.
             // eslint-disable-next-line @typescript-eslint/unbound-method
             const dto = DtoFactory.create(mkUser(), [{ bad: ((u: User) => u.greet) as any }]);
-            assert.ok(!("bad" in dto), "form-3 function return should be skipped at runtime");
+            assert.strictEqual((dto as any)["bad"], null, "form-3 function return should be null at runtime");
         });
 
-        await test("nullifies function elements inside an array", () =>
+        await test("nulls function elements inside an array", () =>
         {
             const bad = [(): void => { /* noop */ }, "ok"];
             class Holder { public arr = bad; }
@@ -268,25 +318,131 @@ await describe("DtoFactory", async () =>
     });
 
 
-    await describe("$typename", async () =>
+    await describe("projection contract (no top-level $typename)", async () =>
     {
-        await test("uses existing $typename on the value when present", () =>
+        await test("does not stamp $typename on a DTO built from a Serializable", () =>
+        {
+            const dto = DtoFactory.create(mkUser(), ["name"]);
+            assert.ok(!("$typename" in dto), "a projection must not claim a type name");
+        });
+
+        await test("does not stamp $typename on a DTO built from a plain class", () =>
+        {
+            const dto = DtoFactory.create(new PlainUser(), ["name"]);
+            assert.ok(!("$typename" in dto));
+        });
+
+        await test("does not copy a source $typename that was not requested", () =>
         {
             const value = { $typename: "custom.Shape", width: 10, height: 20 };
             const dto = DtoFactory.create(value, ["width", "height"]);
-            assert.strictEqual(dto["$typename"], "custom.Shape");
+            assert.ok(!("$typename" in dto));
+            assert.deepStrictEqual(dto, { width: 10, height: 20 });
         });
 
-        await test("falls back to getTypeName() for plain classes without $typename", () =>
+        await test("a DTO is not deserializable — this is the point of dropping $typename", () =>
         {
-            const dto = DtoFactory.create(new PlainUser(), ["name"]);
-            assert.strictEqual(dto["$typename"], "PlainUser");
-        });
-
-        await test("uses Serializable's class name for decorated classes", () =>
-        {
+            // With a $typename, Deserializer would find User registered and call
+            // new User(partialData), silently building a half-constructed aggregate.
             const dto = DtoFactory.create(mkUser(), ["name"]);
-            assert.strictEqual(dto["$typename"], "User");
+            assert.throws(() => Deserializer.deserialize(dto));
+        });
+
+        await test("nested Serializable values keep their own $typename and still round-trip", () =>
+        {
+            const dto = DtoFactory.create(mkUser(), ["address"]);
+            const revived = Deserializer.deserialize<Address>(dto["address"]);
+            assert.ok(revived instanceof Address);
+            assert.strictEqual(revived.street, "711 Kennedy");
+        });
+    });
+
+
+    await describe("nested Serializable uses its own @serialize keys (the asymmetry)", async () =>
+    {
+        await test("top level uses the alias you wrote; nested level uses @serialize keys", () =>
+        {
+            const holder = new GeoHolder();
+            const dto = DtoFactory.create(holder, [{ position: "geo" }]);
+
+            // `position` is the alias; `lat`/`lng` are Geo's @serialize keys, not
+            // its property names (`latitude`/`longitude`).
+            assert.deepStrictEqual(dto["position"], {
+                lat: 45.4,
+                lng: -75.7,
+                $typename: "Geo"
+            });
+        });
+    });
+
+
+    await describe("Date handling", async () =>
+    {
+        await test("a Date property becomes an ISO 8601 string", () =>
+        {
+            const dto = DtoFactory.create(new DateHolder(), ["when"]);
+            assert.strictEqual(dto["when"], "2020-01-01T00:00:00.000Z");
+            assert.strictEqual(typeof dto["when"], "string");
+        });
+
+        await test("a Date nested inside a plain object becomes a string", () =>
+        {
+            const dto = DtoFactory.create(new DateHolder(), ["meta"]);
+            assert.deepStrictEqual(dto["meta"], { at: "2021-01-01T00:00:00.000Z" });
+        });
+
+        await test("a Date inside an array becomes a string", () =>
+        {
+            const dto = DtoFactory.create(new DateHolder(), ["stamps"]);
+            assert.deepStrictEqual(dto["stamps"], ["2022-01-01T00:00:00.000Z"]);
+        });
+    });
+
+
+    await describe("recursive array serialization", async () =>
+    {
+        await test("an array of arrays of Serializable values serializes each element", () =>
+        {
+            const dto = DtoFactory.create(new GridHolder(), ["grid"]);
+            assert.deepStrictEqual(dto["grid"], [
+                [{ street: "1 A St", city: "Alpha", $typename: "Address" }],
+                [{ street: "2 B St", city: "Beta", $typename: "Address" }]
+            ]);
+
+            // Regression guard: JSON-cloning a Serializable would emit the private
+            // backing fields, since getters are not own enumerable properties.
+            assert.ok(!JSON.stringify(dto["grid"]).includes("_street"), "must not leak private fields");
+        });
+    });
+
+
+    await describe("nullish coercion across all three forms", async () =>
+    {
+        class Sparse
+        {
+            public a: string = "x";
+            public b?: string;
+        }
+
+        await test("form 1 coerces a missing value to null", () =>
+        {
+            const dto = DtoFactory.create(new Sparse(), ["a", "b"]);
+            assert.strictEqual(dto["a"], "x");
+            assert.strictEqual(dto["b"], null);
+        });
+
+        await test("form 2 coerces a missing source to null", () =>
+        {
+            const dto = DtoFactory.create(new Sparse(), [{ alias: "b" }]);
+            assert.ok("alias" in dto, "the key must be present, not omitted");
+            assert.strictEqual(dto["alias"], null);
+        });
+
+        await test("form 3 coerces an undefined return to null", () =>
+        {
+            const dto = DtoFactory.create(new Sparse(), [{ x: ((): undefined => undefined) as any }]);
+            assert.ok("x" in dto, "the key must be present, not omitted");
+            assert.strictEqual((dto as any)["x"], null);
         });
     });
 
@@ -305,31 +461,7 @@ await describe("DtoFactory", async () =>
     });
 
 
-    // ------------------------------------------------------------------------
-    // Compile-time rejections (not runtime-verifiable; documented for intent)
-    //
-    // Form 1 / form 2: method-name keys rejected via NonMethodKey<T>:
-    //
-    //   DtoFactory.create(user, ["greet"]);
-    //   // ^ '"greet"' is not assignable to 'DtoKey<User>'.
-    //
-    //   DtoFactory.create(user, [{ g: "greet" }]);
-    //   // ^ '"greet"' is not assignable to 'NonMethodKey<User> | DtoTransform<User>'.
-    //
-    // Form 3: transform returns constrained to DtoReturn (JSON-ish + Date +
-    // Serializable). Any return whose structural type carries a function
-    // member fails to unify:
-    //
-    //   DtoFactory.create(user, [{ f: (u) => u.greet }]);
-    //   // ^ '() => string' is not assignable to type 'DtoReturn'.
-    //
-    //   DtoFactory.create(user, [{ f: (u) => ({ cb: () => u.name }) }]);
-    //   // ^ Property 'cb' is incompatible with index signature.
-    //
-    //   DtoFactory.create(user, [{ f: () => new Map() }]);
-    //   // ^ Map<K,V> / Set<T> / Promise<T> rejected — missing string index.
-    //
-    // The "function-value rejection (runtime backstop)" suite above covers
-    // the `as any` escape hatch and JS-consumer case.
-    // ------------------------------------------------------------------------
+    // Compile-time behavior — inferred DTO shapes and the rejections that go with
+    // them — is asserted in ./dto-factory.types.ts. That file is type-checked by
+    // `tsc` but deliberately not executed, since none of it is runtime-verifiable.
 });
